@@ -67,13 +67,38 @@ if (isGamePage) {
     }
 }
 
-// Match jeetne ke baad call hone wala Adsterra Social Bar Full-Screen Engine
 window.showPostMatchSocialAd = function() {
-    if (window._socialAdInjected) return;
-    window._socialAdInjected = true;
+    if (document.getElementById('post-match-ad-overlay')) return;
 
-    const s = document.createElement('script');
-    s.setAttribute('data-cfasync', 'false');
-    s.src = 'https://bauval.org/14/63d9d3f5a205abf1ec43607647d12b6a';
-    document.body.appendChild(s);
+    const overlay = document.createElement('div');
+    overlay.id = 'post-match-ad-overlay';
+    overlay.style.cssText = `
+        position: fixed; inset: 0; width: 100vw; height: 100vh;
+        background: rgba(3, 7, 18, 0.85); z-index: 2147483647;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+    `;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.innerText = '✕ CLOSE AD';
+    closeBtn.style.cssText = `
+        position: absolute; top: 18px; right: 16px; z-index: 2147483647;
+        background: #ef4444; color: #fff; border: 2px solid #fff;
+        padding: 8px 14px; border-radius: 20px; font-weight: 800; font-size: 12px;
+        cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    `;
+    closeBtn.onclick = () => overlay.remove();
+
+    const adFrame = document.createElement('iframe');
+    adFrame.style.cssText = 'width: 100vw; height: 100vh; border: none; background: transparent;';
+    adFrame.srcdoc = `<!DOCTYPE html>
+    <html>
+    <head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+    <body style="margin:0;padding:0;width:100vw;height:100vh;overflow:hidden;background:transparent;">
+        <script data-cfasync="false" src="https://bauval.org/14/63d9d3f5a205abf1ec43607647d12b6a"><\/script>
+    </body>
+    </html>`;
+
+    overlay.appendChild(adFrame);
+    overlay.appendChild(closeBtn);
+    document.body.appendChild(overlay);
 };
