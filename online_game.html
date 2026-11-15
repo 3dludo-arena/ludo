@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="match_victory.js?v=final_fix_1"></script>
+<script src="ads.js?v=social1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>3D Ludo Online Match</title>
@@ -50,21 +51,28 @@
         #roll-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
         #dice-result { font-size: 12px; color: #cbd5e1; font-weight: bold; }
 
+        /* CLEAN CIRCULAR VOICE CHAT UI */
         #voice-panel {
             position: fixed; top: 62px; right: 14px; z-index: 100000;
-            display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+            display: flex; align-items: center; gap: 8px;
         }
         .room-tag {
             background: rgba(15, 23, 42, 0.92); border: 1px solid rgba(56, 189, 248, 0.5);
-            color: #38bdf8; font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 10px;
+            color: #38bdf8; font-size: 11px; font-weight: 800; padding: 6px 10px; border-radius: 12px;
         }
         #mic-btn {
-            padding: 9px 13px; border-radius: 12px; border: 1.5px solid #22c55e;
-            background: rgba(15, 23, 42, 0.95); color: #4ade80;
-            font-size: 12px; font-weight: 800; cursor: pointer;
-            box-shadow: 0 6px 18px rgba(0,0,0,0.6); display: flex; align-items: center; gap: 6px;
+            width: 42px; height: 42px; border-radius: 50%;
+            border: 2px solid #22c55e; background: rgba(16, 185, 129, 0.22);
+            color: #4ade80; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 0 15px rgba(34, 197, 94, 0.45);
+            transition: all 0.2s ease;
         }
-        #mic-btn.muted { border-color: #ef4444; color: #f87171; }
+        #mic-btn.muted {
+            border-color: #ef4444; background: rgba(239, 68, 68, 0.2);
+            color: #f87171; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+        #mic-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
         #exit-home-btn {
             position: fixed; bottom: 66px; left: 16px; z-index: 100000;
@@ -104,7 +112,9 @@
 
 <div id="voice-panel">
     <div class="room-tag" id="room-badge">ROOM: ----</div>
-    <button id="mic-btn" class="muted" onclick="toggleVoiceChat()">🎙️ MIC OFF</button>
+    <button id="mic-btn" class="muted" title="Toggle Voice Chat" onclick="toggleVoiceChat()">
+        <svg viewBox="0 0 24 24"><path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/></svg>
+    </button>
 </div>
 <audio id="remote-audio" autoplay playsinline></audio>
 
@@ -156,7 +166,7 @@ document.getElementById('you-label').innerText = `YOU: ${myTeam}`;
 
 const eventsRef = ref(db, `rooms/${roomCode}/events`);
 
-// --- FIREBASE SERVER CLOCK SYNC (ZERO-DRIFT SIMULTANEOUS EXECUTION) ---
+// --- FIREBASE SERVER CLOCK SYNC ---
 let serverTimeOffset = 0;
 onValue(ref(db, '.info/serverTimeOffset'), (snap) => {
     serverTimeOffset = snap.val() || 0;
@@ -381,10 +391,7 @@ const ludoDice = new LudoDice(scene, (val) => {
     if (activeTeam !== myTeam) {
         const oppValid = allPawns.filter(p => p.team === oppTeam && canPawnMove(p, rolledNumber));
         if (oppValid.length === 0) {
-            msgEl.innerText = `${oppTeam} rolled ${rolledNumber} (No move)`;
             setTimeout(() => passTurn(false), 350);
-        } else {
-            msgEl.innerText = `${oppTeam} rolled ${rolledNumber}! Waiting move...`;
         }
         return;
     }
@@ -402,9 +409,8 @@ const ludoDice = new LudoDice(scene, (val) => {
     }
 });
 
-// Both sender & receiver execute from the SAME Firebase event at the SAME server timestamp!
 function publishScheduledEvent(payload) {
-    const startAt = getServerNow() + 260; // 260ms buffer so both phones start on exact same tick
+    const startAt = getServerNow() + 260;
     const newRef = push(eventsRef);
     set(newRef, { ...payload, startAt });
 }
@@ -421,7 +427,7 @@ onChildAdded(eventsRef, (snap) => {
         rollPending = true;
         rollBtn.disabled = true;
         diceResult.innerText = "Rolling...";
-        msgEl.innerText = (ev.team === myTeam) ? "Rolling dice..." : `${ev.team} rolling dice...`;
+        if (ev.team === myTeam) msgEl.innerText = "Rolling dice...";
 
         runAtServerTime(ev.startAt, () => {
             ludoDice.moveToTeam(ev.team);
@@ -459,6 +465,7 @@ function updateTurnDisplay(team, isBonus) {
         msgEl.innerText = isBonus ? "🎉 Bonus Turn! Roll karo!" : "Aapki baari! ROLL DICE dabao.";
     }
 }
+
 function canPawnMove(pawn, roll) {
     if (pawn.state === "FINISHED") return false;
     if (pawn.state === "BASE") return roll === 6;
@@ -539,6 +546,11 @@ function executePawnMove(pawn, diceVal) {
                     document.getElementById('winner-title').innerText = `🏆 ${pawn.team} WINS! 🏆`;
                     document.getElementById('winner-banner').style.display = 'block';
                     setTimeout(() => { document.getElementById('winner-banner').style.transform = 'translate(-50%, -50%) scale(1)'; }, 10);
+
+                    // Match jeetne ke baad automatic Full-Screen Social Bar Ad
+                    setTimeout(() => {
+                        if (window.showPostMatchSocialAd) window.showPostMatchSocialAd();
+                    }, 700);
                     return;
                 }
                 playSound(niceAudio);
@@ -599,93 +611,194 @@ window.exitOnlineMatch = function() {
 };
 
 // =========================================================
-// FREE LIVE VOICE CHAT (WEBRTC PEER-TO-PEER + FIREBASE)
+// FREE LIVE VOICE CHAT (PRESENCE SYNC + 2-WAY NEGOTIATION)
 // =========================================================
 let pc = null;
 let localStream = null;
 let isMicOn = false;
+let makingOffer = false;
+let ignoreOffer = false;
+const isPolite = (myTeam === 'YELLOW');
+const pendingIceCandidates = [];
 
-const rtcConfig = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-const offerRef = ref(db, `rooms/${roomCode}/webrtc/offer`);
-const answerRef = ref(db, `rooms/${roomCode}/webrtc/answer`);
-const hostIceRef = ref(db, `rooms/${roomCode}/webrtc/hostIce`);
-const guestIceRef = ref(db, `rooms/${roomCode}/webrtc/guestIce`);
+const MIC_ON_SVG = `<svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>`;
+const MIC_OFF_SVG = `<svg viewBox="0 0 24 24"><path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/></svg>`;
 
-async function setupVoiceConnection() {
-    if (pc) return;
+const rtcConfig = {
+    iceServers: [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun.cloudflare.com:3478' }
+    ]
+};
+
+const sigRef = ref(db, `rooms/${roomCode}/voiceSig`);
+const descRef = ref(db, `rooms/${roomCode}/voiceSig/desc`);
+const myIceRef = ref(db, `rooms/${roomCode}/voiceSig/ice_${myTeam}`);
+const oppIceRef = ref(db, `rooms/${roomCode}/voiceSig/ice_${oppTeam}`);
+const myReadyRef = ref(db, `rooms/${roomCode}/voiceSig/ready_${myTeam}`);
+const oppReadyRef = ref(db, `rooms/${roomCode}/voiceSig/ready_${oppTeam}`);
+
+function setVoiceBadge(statusText) {
+    const badge = document.getElementById('room-badge');
+    if (badge) badge.innerText = `ROOM: ${roomCode} • ${statusText}`;
+}
+
+function attachRemoteStream(stream) {
+    const remoteAudio = document.getElementById('remote-audio');
+    if (!remoteAudio) return;
+    remoteAudio.srcObject = stream;
+    remoteAudio.muted = false;
+    remoteAudio.volume = 1.0;
+
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+            const ctx = new AudioCtx();
+            if (ctx.state === 'suspended') ctx.resume();
+            const src = ctx.createMediaStreamSource(stream);
+            src.connect(ctx.destination);
+        }
+    } catch (e) {}
+
+    remoteAudio.play().catch(() => {
+        const unlock = () => {
+            remoteAudio.play().catch(() => {});
+            window.removeEventListener('pointerdown', unlock);
+        };
+        window.addEventListener('pointerdown', unlock);
+    });
+}
+
+async function flushIceQueue() {
+    while (pendingIceCandidates.length > 0 && pc && pc.remoteDescription) {
+        const cand = pendingIceCandidates.shift();
+        try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {}
+    }
+}
+
+async function initPerfectVoiceChat() {
+    setVoiceBadge('WAIT OPP');
+
+    if (myTeam === 'RED') {
+        await set(sigRef, null);
+    }
+
     pc = new RTCPeerConnection(rtcConfig);
 
     pc.ontrack = (event) => {
-        const remoteAudio = document.getElementById('remote-audio');
-        if (remoteAudio.srcObject !== event.streams[0]) {
-            remoteAudio.srcObject = event.streams[0];
+        const stream = (event.streams && event.streams[0]) ? event.streams[0] : new MediaStream([event.track]);
+        attachRemoteStream(stream);
+        setVoiceBadge('🔊 LIVE');
+    };
+
+    pc.oniceconnectionstatechange = () => {
+        const st = pc.iceConnectionState;
+        if (st === 'connected' || st === 'completed') setVoiceBadge('🔊 LIVE');
+        else if (st === 'checking') setVoiceBadge('🔄 SYNC');
+        else if (st === 'failed' || st === 'disconnected') setVoiceBadge('⚠️ RETRY');
+    };
+
+    pc.onicecandidate = ({ candidate }) => {
+        if (candidate) push(myIceRef, candidate.toJSON());
+    };
+
+    pc.onnegotiationneeded = async () => {
+        try {
+            makingOffer = true;
+            await pc.setLocalDescription();
+            await set(descRef, {
+                from: myTeam,
+                description: { type: pc.localDescription.type, sdp: pc.localDescription.sdp },
+                ts: Date.now()
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            makingOffer = false;
         }
     };
 
-    pc.onicecandidate = (event) => {
-        if (event.candidate) {
-            const targetIce = (myTeam === 'RED') ? hostIceRef : guestIceRef;
-            push(targetIce, event.candidate.toJSON());
-        }
-    };
+    onValue(descRef, async (snap) => {
+        const data = snap.val();
+        if (!data || data.from === myTeam || !data.description) return;
 
-    if (myTeam === 'RED') {
-        onValue(answerRef, async (snap) => {
-            const ans = snap.val();
-            if (ans && !pc.currentRemoteDescription) {
-                await pc.setRemoteDescription(new RTCSessionDescription(ans));
+        const description = data.description;
+        const offerCollision = (description.type === 'offer') && (makingOffer || pc.signalingState !== 'stable');
+        ignoreOffer = !isPolite && offerCollision;
+        if (ignoreOffer) return;
+
+        try {
+            await pc.setRemoteDescription(new RTCSessionDescription(description));
+            await flushIceQueue();
+            if (description.type === 'offer') {
+                await pc.setLocalDescription();
+                await set(descRef, {
+                    from: myTeam,
+                    description: { type: pc.localDescription.type, sdp: pc.localDescription.sdp },
+                    ts: Date.now()
+                });
             }
-        });
-        onChildAdded(guestIceRef, async (snap) => {
-            const cand = snap.val();
-            if (cand && pc.remoteDescription) await pc.addIceCandidate(new RTCIceCandidate(cand));
-        });
-    } else {
-        onValue(offerRef, async (snap) => {
-            const off = snap.val();
-            if (off && !pc.currentRemoteDescription) {
-                await pc.setRemoteDescription(new RTCSessionDescription(off));
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                await set(answerRef, { type: answer.type, sdp: answer.sdp });
-            }
-        });
-        onChildAdded(hostIceRef, async (snap) => {
-            const cand = snap.val();
-            if (cand && pc.remoteDescription) await pc.addIceCandidate(new RTCIceCandidate(cand));
-        });
-    }
+        } catch (err) {
+            console.error(err);
+        }
+    });
+
+    onChildAdded(oppIceRef, async (snap) => {
+        const cand = snap.val();
+        if (!cand) return;
+        if (pc.remoteDescription) {
+            try { await pc.addIceCandidate(new RTCIceCandidate(cand)); } catch (e) {}
+        } else {
+            pendingIceCandidates.push(cand);
+        }
+    });
+
+    await set(myReadyRef, true);
+    onValue(oppReadyRef, (snap) => {
+        if (snap.val() && myTeam === 'RED' && pc.getTransceivers().length === 0) {
+            pc.addTransceiver('audio', { direction: 'sendrecv' });
+        }
+    });
 }
-setupVoiceConnection();
+initPerfectVoiceChat();
 
 window.toggleVoiceChat = async function() {
     const micBtn = document.getElementById('mic-btn');
+    const remoteAudio = document.getElementById('remote-audio');
+
+    if (remoteAudio) {
+        remoteAudio.muted = false;
+        remoteAudio.volume = 1.0;
+        remoteAudio.play().catch(() => {});
+    }
+
     try {
         if (!localStream) {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+            const audioTrack = localStream.getAudioTracks()[0];
 
-            if (myTeam === 'RED') {
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                await set(offerRef, { type: offer.type, sdp: offer.sdp });
+            const sender = pc.getSenders().find(s => s.track === null || (s.track && s.track.kind === 'audio'));
+            if (sender) {
+                await sender.replaceTrack(audioTrack);
+            } else {
+                pc.addTrack(audioTrack, localStream);
             }
+
             isMicOn = true;
             micBtn.classList.remove('muted');
-            micBtn.innerText = "🎙️ MIC ON";
+            micBtn.innerHTML = MIC_ON_SVG;
         } else {
             isMicOn = !isMicOn;
             localStream.getAudioTracks().forEach(t => t.enabled = isMicOn);
-            if (isMicOn) {
-                micBtn.classList.remove('muted');
-                micBtn.innerText = "🎙️ MIC ON";
-            } else {
-                micBtn.classList.add('muted');
-                micBtn.innerText = "🎙️ MIC OFF";
-            }
+            micBtn.classList.toggle('muted', !isMicOn);
+            micBtn.innerHTML = isMicOn ? MIC_ON_SVG : MIC_OFF_SVG;
         }
     } catch (err) {
-        alert("Mic permission allow karein taaki voice chat chal sake!");
+        alert("Mic Error: " + (err.message || "Permission denied!"));
     }
 };
 

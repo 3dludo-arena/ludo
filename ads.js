@@ -1,6 +1,4 @@
-// --- GLOBAL ADSTERRA BANNER ENGINE ---
-
-// Sirf tabhi chalao jab URL me 'game.html' ho
+// --- GLOBAL ADSTERRA BANNER & POST-MATCH SOCIAL BAR ENGINE ---
 const isGamePage = window.location.pathname.includes('game.html') || window.location.href.includes('game.html');
 
 if (isGamePage) {
@@ -16,71 +14,45 @@ if (isGamePage) {
     }
 
     function initAdsterraUI() {
-        // 1. Purani bonus strip gayab karo
         const oldBonus = document.getElementById('game-bottom-banner');
         if (oldBonus) oldBonus.remove();
 
-        // 2. Game screen specific CSS
         const style = document.createElement('style');
         style.innerHTML = `
             #game-bottom-banner, .bonus-reward-bar {
-                display: none !important;
-                opacity: 0 !important;
-                pointer-events: none !important;
+                display: none !important; opacity: 0 !important; pointer-events: none !important;
             }
-
             #global-top-ad {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 52px !important;
+                position: fixed !important; top: 0 !important; left: 0 !important;
+                width: 100vw !important; height: 52px !important;
                 background: rgba(10, 15, 30, 0.95) !important;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                z-index: 999999 !important;
+                display: flex !important; align-items: center !important; justify-content: center !important;
+                z-index: 99999 !important;
             }
-
             #global-bottom-ad {
-                position: fixed !important;
-                bottom: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 54px !important;
+                position: fixed !important; bottom: 0 !important; left: 0 !important;
+                width: 100vw !important; height: 54px !important;
                 background: rgba(10, 15, 30, 0.95) !important;
                 border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-                z-index: 999999 !important;
+                display: flex !important; align-items: center !important; justify-content: center !important;
+                z-index: 99999 !important;
             }
-
             #exit-home-btn, .home-btn, a[href*="index"], a[href*="home"] {
-                position: fixed !important;
-                bottom: 66px !important;
-                left: 16px !important;
-                z-index: 1000000 !important;
-                display: flex !important;
-                visibility: visible !important;
+                position: fixed !important; bottom: 66px !important; left: 16px !important;
+                z-index: 100000 !important; display: flex !important; visibility: visible !important;
             }
-
-            .pos-red { top: 62px !important; left: 16px !important; }
-            .pos-green { top: 62px !important; right: 16px !important; }
         `;
         document.head.appendChild(style);
 
-        // 3. Top Banner
-        if (!document.getElementById('global-top-ad')) {
+        if (!document.getElementById('global-top-ad') && !document.getElementById('top-ad-header')) {
             const topBar = document.createElement('div');
             topBar.id = 'global-top-ad';
             topBar.appendChild(createBannerFrame());
             document.body.appendChild(topBar);
         }
 
-        // 4. Bottom Banner
-        if (!document.getElementById('global-bottom-ad')) {
+        if (!document.getElementById('global-bottom-ad') && !document.getElementById('bottom-ad-footer')) {
             const botBar = document.createElement('div');
             botBar.id = 'global-bottom-ad';
             botBar.appendChild(createBannerFrame());
@@ -94,3 +66,14 @@ if (isGamePage) {
         initAdsterraUI();
     }
 }
+
+// Match jeetne ke baad call hone wala Adsterra Social Bar Full-Screen Engine
+window.showPostMatchSocialAd = function() {
+    if (window._socialAdInjected) return;
+    window._socialAdInjected = true;
+
+    const s = document.createElement('script');
+    s.setAttribute('data-cfasync', 'false');
+    s.src = 'https://bauval.org/14/63d9d3f5a205abf1ec43607647d12b6a';
+    document.body.appendChild(s);
+};
