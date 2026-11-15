@@ -6,6 +6,16 @@
     const SMARTLINK_URL = "https://asiafilm.org/4/954a104b8139a43df248e2b88ce49bf6";
     let finishedRankings = [];
 
+    function wipeSavedMatchData() {
+        try {
+            Object.keys(localStorage).forEach(key => {
+                if (key !== 'ludo_user_profile_v4' && !key.toLowerCase().includes('profile')) {
+                    localStorage.removeItem(key);
+                }
+            });
+        } catch (e) {}
+    }
+
     function injectVictoryElements() {
         if (document.getElementById('victory-popup-modal')) return;
 
@@ -83,6 +93,9 @@
     }
 
     function handleExitWithAd() {
+        // Purana finished match clear karo taaki dubara resume na ho
+        wipeSavedMatchData();
+
         // Modal hide karo
         const modal = document.getElementById('victory-popup-modal');
         if (modal) modal.style.display = 'none';
@@ -101,6 +114,7 @@
     // Dynamic Finish Trigger Function
     window.showMatchEndPopup = function(winnerPlayer) {
         injectVictoryElements();
+        wipeSavedMatchData();
 
         if (winnerPlayer && !finishedRankings.includes(winnerPlayer)) {
             finishedRankings.push(winnerPlayer);

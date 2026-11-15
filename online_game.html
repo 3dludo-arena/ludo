@@ -542,18 +542,18 @@ function executePawnMove(pawn, diceVal) {
                 const done = allPawns.filter(p => p.team === pawn.team && p.state === "FINISHED").length;
                 const slot = HOME_SLOTS[pawn.team][Math.min(done - 1, 3)];
                 new TWEEN.Tween(pawn.group.position).to({ x: slot[0], z: slot[1] }, 100).start();
-                if (done === 4) {
-                    playSound(winAudio);
-                    document.getElementById('winner-title').innerText = `🏆 ${pawn.team} WINS! 🏆`;
-                    document.getElementById('winner-banner').style.display = 'block';
-                    setTimeout(() => { document.getElementById('winner-banner').style.transform = 'translate(-50%, -50%) scale(1)'; }, 10);
-
-                    // Match jeetne ke baad automatic Full-Screen Social Bar Ad
-                    setTimeout(() => {
-                        if (window.showPostMatchSocialAd) window.showPostMatchSocialAd();
-                    }, 700);
-                    return;
-                }
+                if (done === 4)  {
+                            playSound(winAudio);
+                            setTimeout(() => {
+                                if (window.showMatchEndPopup) {
+                                    window.showMatchEndPopup(pawn.team);
+                                } else {
+                                    document.getElementById('winner-title').innerText = `🏆 ${pawn.team} WINS! 🏆`;
+                                    document.getElementById('winner-banner').style.display = 'block';
+                                }
+                            }, 600);
+                            return;
+                        }
                 playSound(niceAudio);
             } else if (pawn.stepCount >= 51) {
                 pawn.state = "HOME_LANE";
@@ -880,5 +880,8 @@ animate();
 ludoDice.moveToTeam("RED");
 updateTurnDisplay("RED", false);
 </script>
+
+<script src="match_victory.js"></script>
+
 </body>
 </html>
