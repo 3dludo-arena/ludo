@@ -9,10 +9,17 @@
     let tempAvatar = "🧑‍🎤";
 
     function isFirstTimeUser() {
-        return !localStorage.getItem(ONBOARDING_KEY);
+        try {
+            if (localStorage.getItem(ONBOARDING_KEY) === "true") return false;
+            const savedProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || "null");
+            if (savedProfile && savedProfile.name && savedProfile.name.trim() !== "") {
+                localStorage.setItem(ONBOARDING_KEY, "true");
+                return false;
+            }
+        } catch (e) {}
+        return true;
     }
 
-    // Modal UI dynamically inject karta hai
     function injectWelcomeModal() {
         if (document.getElementById('first-time-profile-modal')) return;
 
@@ -63,7 +70,6 @@
 
         document.body.appendChild(modalDiv);
 
-        // Avatar Click Listeners
         const avatars = modalDiv.querySelectorAll('.ob-avatar');
         avatars.forEach(el => {
             el.addEventListener('click', () => {
@@ -77,7 +83,6 @@
             });
         });
 
-        // Submit Button Listener
         const submitBtn = document.getElementById('ob-submit-btn');
         const inputField = document.getElementById('ob-player-input');
 
@@ -89,7 +94,6 @@
                 return;
             }
 
-            // Purane profile data ko get karke naye name se replace karo
             let existing = {};
             try {
                 existing = JSON.parse(localStorage.getItem(PROFILE_KEY)) || {};
@@ -108,7 +112,6 @@
             localStorage.setItem(PROFILE_KEY, JSON.stringify(updatedProfile));
             localStorage.setItem(ONBOARDING_KEY, "true");
 
-            // Screen par turant name aur avatar update karo
             const uiName = document.getElementById('ui-name');
             const uiAvatar = document.getElementById('ui-avatar');
             if (uiName) uiName.innerText = chosenName;

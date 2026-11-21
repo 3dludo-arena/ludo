@@ -804,6 +804,14 @@ function startPaidGame(redirectUrl) {
     }
     data.coins -= 50;
     localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+
+    // Naya match start karne se pehle purana saved/finished match state clear karein
+    Object.keys(localStorage).forEach(key => {
+        if (key !== PROFILE_KEY && !key.toLowerCase().includes('profile')) {
+            localStorage.removeItem(key);
+        }
+    });
+
     setTimeout(() => { window.location.href = redirectUrl; }, 120);
 }
 
@@ -832,76 +840,23 @@ function claimDailyReward() {
     alert("🎉 Daily Login Reward Claimed! +50 Coins credited!");
 }
 
-// 3. REWARDED AD CONTROLLER
-let adTimer = null;
-let adTimeLeft = 30;
+// 3. SMARTLINK REWARDED AD CONTROLLER (+ FREE COINS)
+const ADSTERRA_SMARTLINK = "https://asiafilm.org/4/954a104b8139a43df248e2b88ce49bf6";
 
 function startWatchingAd() {
-    const modal = document.getElementById('ad-modal');
-    const crossBtn = document.getElementById('ad-cross-btn');
-    const claimBtn = document.getElementById('ad-claim-btn');
-    const secCount = document.getElementById('ad-sec-count');
-    const statusMsg = document.getElementById('ad-status-msg');
-    const adIframe1 = document.getElementById('ad-iframe-1');
-    const adIframe2 = document.getElementById('ad-iframe-2');
+    try {
+        window.open(ADSTERRA_SMARTLINK, '_blank');
+    } catch (e) {}
 
-    if (!modal) return;
-    if (adIframe1) adIframe1.srcdoc = adIframe1.srcdoc;
-    if (adIframe2) adIframe2.srcdoc = adIframe2.srcdoc;
-
-    modal.style.display = 'flex';
-    adTimeLeft = 30;
-
-    if (crossBtn) crossBtn.style.display = 'none';
-    if (claimBtn) {
-        claimBtn.disabled = true;
-        claimBtn.style.background = '#1e293b';
-        claimBtn.style.color = '#64748b';
-        claimBtn.style.cursor = 'not-allowed';
-        claimBtn.innerText = "⏳ Please Wait (30s)...";
-        claimBtn.onclick = null;
-    }
-    if (secCount) secCount.innerText = adTimeLeft;
-    if (statusMsg) {
-        statusMsg.style.display = 'block';
-        statusMsg.innerHTML = `Ad chal rahi hai... Reward in: <span id="ad-sec-count" style="color:#38bdf8; font-size:22px; font-weight:900;">30</span>s`;
-    }
-
-    clearInterval(adTimer);
-    adTimer = setInterval(() => {
-        adTimeLeft--;
-        const liveSec = document.getElementById('ad-sec-count');
-        if (liveSec) liveSec.innerText = adTimeLeft;
-        if (claimBtn) claimBtn.innerText = `⏳ Please Wait (${adTimeLeft}s)...`;
-
-        if (adTimeLeft <= 0) {
-            clearInterval(adTimer);
-            if (statusMsg) statusMsg.innerHTML = "🎉 <span style='color:#34d399;'>Ad Complete! Claim Your Reward</span>";
-            if (crossBtn) crossBtn.style.display = 'flex';
-            if (claimBtn) {
-                claimBtn.disabled = false;
-                claimBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
-                claimBtn.style.color = '#ffffff';
-                claimBtn.style.cursor = 'pointer';
-                claimBtn.style.boxShadow = '0 6px 20px rgba(16,185,129,0.5)';
-                claimBtn.innerText = "✕ CLOSE & CLAIM +100 COINS 🎉";
-                claimBtn.onclick = closeAdAndReward;
-            }
-        }
-    }, 1000);
-}
-
-function closeAdAndReward() {
-    clearInterval(adTimer);
-    const modal = document.getElementById('ad-modal');
-    if (modal) modal.style.display = 'none';
-    try { niceAudio.play().catch(()=>{}); } catch(e){}
-
+    try { niceAudio.play().catch(() => {}); } catch (e) {}
     const data = getProfile();
-    data.coins = Number(data.coins || 0) + 100;
+    data.coins = Number(data.coins || 0) +100;
     localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
     loadProfile();
-    alert("🎉 Ad Verified! +100 Coins aapke wallet me add ho gaye!");
+
+    setTimeout(() => {
+        alert("🎉 Sponsored Ad Opened! +100 Free Coins aapke wallet me add ho gaye!");
+    }, 500);
 }
 
 // PROFILE EDIT MODAL

@@ -137,7 +137,7 @@
 <div id="winner-banner">
     <div id="winner-title">🏆 RED WINS! 🏆</div>
     <div id="winner-sub">Online Match Over!</div>
-    <button class="end-btn" onclick="window.location.href='index.html'">RETURN TO DASHBOARD 🏠</button>
+    <button class="end-btn" onclick="window.location.href='home.html'">RETURN TO DASHBOARD 🏠</button>
 </div>
 
 <script type="module">
@@ -289,11 +289,15 @@ const GRID_PATH = [
 const TRACK = GRID_PATH.map(g => cellToCoord(g[0], g[1]));
 const HOME_RUNS = {
     RED: [[1,7],[2,7],[3,7],[4,7],[5,7]].map(g => cellToCoord(g[0], g[1])),
-    YELLOW: [[13,7],[12,7],[11,7],[10,7],[9,7]].map(g => cellToCoord(g[0], g[1]))
+    GREEN: [[7,1],[7,2],[7,3],[7,4],[7,5]].map(g => cellToCoord(g[0], g[1])),
+    YELLOW: [[13,7],[12,7],[11,7],[10,7],[9,7]].map(g => cellToCoord(g[0], g[1])),
+    BLUE: [[7,13],[7,12],[7,11],[7,10],[7,9]].map(g => cellToCoord(g[0], g[1]))
 };
 const HOME_SLOTS = {
     RED: [[-0.9,-0.3],[-0.5,-0.3],[-0.9,0.3],[-0.5,0.3]],
-    YELLOW: [[0.5,-0.3],[0.9,-0.3],[0.5,0.3],[0.9,0.3]]
+    GREEN: [[-0.3,-0.9],[0.3,-0.9],[-0.3,-0.5],[0.3,-0.5]],
+    YELLOW: [[0.5,-0.3],[0.9,-0.3],[0.5,0.3],[0.9,0.3]],
+    BLUE: [[-0.3,0.5],[0.3,0.5],[-0.3,0.9],[0.3,0.9]]
 };
 
 const tileGeo = new THREE.BoxGeometry(0.96, 0.56, 0.96);
@@ -312,6 +316,8 @@ TRACK.forEach((pos, idx) => {
 });
 HOME_RUNS.RED.forEach(p => renderTile(p, C_RED));
 HOME_RUNS.YELLOW.forEach(p => renderTile(p, C_YELLOW));
+HOME_RUNS.GREEN.forEach(p => renderTile(p, C_GREEN));
+HOME_RUNS.BLUE.forEach(p => renderTile(p, C_BLUE));
 
 // --- TOKENS ---
 const TEAMS = {
@@ -354,6 +360,29 @@ function getPawnCoordinate(pawn, steps) {
 }
 
 const TILE_OFFSET_MAP = { 1: [[0,0]], 2: [[-0.2,-0.2],[0.2,0.2]], 3: [[-0.22,-0.22],[0.22,-0.22],[0,0.22]], 4: [[-0.22,-0.22],[0.22,-0.22],[-0.22,0.22],[0.22,0.22]] };
+
+function rearrangeHomeLaneTokens(team) {
+    const homePawns = allPawns.filter(p => p.team === team && p.state === "HOME_LANE");
+    const byStep = {};
+    homePawns.forEach(p => {
+        if (!byStep[p.stepCount]) byStep[p.stepCount] = [];
+        byStep[p.stepCount].push(p);
+    });
+    Object.keys(byStep).forEach(stepStr => {
+        const list = byStep[stepStr];
+        const stepNum = Number(stepStr);
+        const basePos = HOME_RUNS[team][stepNum - 51];
+        if (!basePos) return;
+        const offs = TILE_OFFSET_MAP[Math.min(list.length, 4)];
+        const sc = list.length > 1 ? 0.78 : 1.0;
+        list.forEach((p, idx) => {
+            const off = offs[idx % offs.length];
+            new TWEEN.Tween(p.group.position).to({ x: basePos[0] + off[0], z: basePos[1] + off[1] }, 120).start();
+            new TWEEN.Tween(p.group.scale).to({ x: sc, y: sc, z: sc }, 120).start();
+        });
+    });
+}
+
 function rearrangeTileTokens(trackIdx) {
     if (trackIdx === -1) return;
     const list = allPawns.filter(p => p.state === "TRACK" && p.trackIdx === trackIdx);
@@ -525,6 +554,7 @@ function executePawnMove(pawn, diceVal) {
             .onComplete(() => {
                 checkCut(pawn);
                 rearrangeTileTokens(pawn.trackIdx);
+                rearrangeHomeLaneTokens(pawn.team);
                 isTokenMoving = false;
                 passTurn(true);
             }).start();
@@ -538,22 +568,24 @@ function executePawnMove(pawn, diceVal) {
             if (pawn.stepCount === 56) {
                 pawn.state = "FINISHED";
                 pawn.trackIdx = -1;
+                pawn.group.scale.set(0.85, 0.85, 0.85);
                 gotBonus = true;
                 const done = allPawns.filter(p => p.team === pawn.team && p.state === "FINISHED").length;
                 const slot = HOME_SLOTS[pawn.team][Math.min(done - 1, 3)];
                 new TWEEN.Tween(pawn.group.position).to({ x: slot[0], z: slot[1] }, 100).start();
-                if (done === 4)  {
-                            playSound(winAudio);
-                            setTimeout(() => {
-                                if (window.showMatchEndPopup) {
-                                    window.showMatchEndPopup(pawn.team);
-                                } else {
-                                    document.getElementById('winner-title').innerText = `🏆 ${pawn.team} WINS! 🏆`;
-                                    document.getElementById('winner-banner').style.display = 'block';
-                                }
-                            }, 600);
-                            return;
+                if (done === 4) {
+                    playSound(winAudio);
+                    rearrangeHomeLaneTokens(pawn.team);
+                    setTimeout(() => {
+                        if (window.showMatchEndPopup) {
+                            window.showMatchEndPopup(pawn.team);
+                        } else {
+                            document.getElementById('winner-title').innerText = `🏆 ${pawn.team} WINS! 🏆`;
+                            document.getElementById('winner-banner').style.display = 'block';
                         }
+                    }, 600);
+                    return;
+                }
                 playSound(niceAudio);
             } else if (pawn.stepCount >= 51) {
                 pawn.state = "HOME_LANE";
@@ -565,6 +597,7 @@ function executePawnMove(pawn, diceVal) {
 
             rearrangeTileTokens(oldTrackIdx);
             if (pawn.trackIdx !== -1) rearrangeTileTokens(pawn.trackIdx);
+            rearrangeHomeLaneTokens(pawn.team);
             isTokenMoving = false;
             passTurn(gotBonus);
             return;
@@ -607,7 +640,7 @@ function passTurn(extraRoll) {
 
 window.exitOnlineMatch = function() {
     if (confirm("Online match chhod kar wapas jana hai?")) {
-        window.location.href = 'index.html';
+        window.location.href = 'home.html';
     }
 };
 
