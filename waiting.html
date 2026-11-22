@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script src="ads.js?v=live_final"></script>
-    <script src="ads.js?v=social1"></script>
+    <script src="ads.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>3D Ludo - Waiting Room</title>
@@ -15,19 +14,10 @@
             font-family: 'Segoe UI', Tahoma, sans-serif; color: #fff;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
             user-select: none;
-        }
-        #top-ad-header {
-            width: 100vw; height: 52px; background: rgba(10, 15, 30, 0.95);
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        #bottom-ad-footer {
-            width: 100vw; height: 54px; background: rgba(10, 15, 30, 0.95);
-            border-top: 1px solid rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            padding: 10px 0 64px 0;
         }
         .main-wrap {
-            width: 100%; max-width: 400px; flex: 1; padding: 12px 16px;
+            width: 100%; max-width: 400px; flex: 1; padding: 8px 16px;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
         }
         .top-nav {
@@ -108,10 +98,6 @@
 </head>
 <body>
 
-<div id="top-ad-header">
-    <iframe srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;overflow:hidden;"></iframe>
-</div>
-
 <div class="main-wrap">
     <div class="top-nav">
         <button class="back-btn" onclick="leaveWaitingRoom()">← Exit</button>
@@ -161,10 +147,6 @@
         <div id="status-text">Waiting for friends to join...</div>
         <button id="play-now-btn" onclick="startOnlineGame()">PLAY NOW 🚀</button>
     </div>
-</div>
-
-<div id="bottom-ad-footer">
-    <iframe srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;overflow:hidden;"></iframe>
 </div>
 
 <script type="module">

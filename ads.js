@@ -1,104 +1,144 @@
-// --- GLOBAL ADSTERRA BANNER & POST-MATCH SOCIAL BAR ENGINE ---
-const isGamePage = window.location.pathname.includes('game.html') || window.location.href.includes('game.html');
+// ==========================================
+// 100% GOOGLE ADMOB MANAGER (TEST MODE ON)
+// ==========================================
+const ADMOB_UNITS = {
+    bannerId: 'ca-app-pub-8792473302147407/1351957061',       // Gameplay_Bottom_Banner
+    interstitialId: 'ca-app-pub-8792473302147407/4652762037', // GameOver_Interstitial
+    rewardedId: 'ca-app-pub-8792473302147407/6272452114'      // Rewarded_Free_Coins
+};
 
-if (isGamePage) {
-    function createBannerFrame() {
-        const iframe = document.createElement('iframe');
-        iframe.srcdoc = `<!DOCTYPE html><html><body style="margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;"><script type="text/javascript">atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type="text/javascript" src="https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0"></script></body></html>`;
-        iframe.width = "320";
-        iframe.height = "50";
-        iframe.style.border = "none";
-        iframe.style.overflow = "hidden";
-        iframe.scrolling = "no";
-        return iframe;
-    }
+// ABHI TESTING KE LIYE true HAI — UPLOAD SE PEHLE false KARNA HAI!
+const USE_TEST_ADS = true;
 
-    function initAdsterraUI() {
-        const oldBonus = document.getElementById('game-bottom-banner');
-        if (oldBonus) oldBonus.remove();
+let admobInitialized = false;
+let isBannerShowing = false;
+let isInterstitialLoaded = false;
+let isRewardedLoaded = false;
 
-        const style = document.createElement('style');
-        style.innerHTML = `
-            #game-bottom-banner, .bonus-reward-bar {
-                display: none !important; opacity: 0 !important; pointer-events: none !important;
-            }
-            #global-top-ad {
-                position: fixed !important; top: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 52px !important;
-                background: rgba(10, 15, 30, 0.95) !important;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-                display: flex !important; align-items: center !important; justify-content: center !important;
-                z-index: 99999 !important;
-            }
-            #global-bottom-ad {
-                position: fixed !important; bottom: 0 !important; left: 0 !important;
-                width: 100vw !important; height: 54px !important;
-                background: rgba(10, 15, 30, 0.95) !important;
-                border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-                display: flex !important; align-items: center !important; justify-content: center !important;
-                z-index: 99999 !important;
-            }
-            #exit-home-btn, .home-btn, a[href*="index"], a[href*="home"] {
-                position: fixed !important; bottom: 66px !important; left: 16px !important;
-                z-index: 100000 !important; display: flex !important; visibility: visible !important;
-            }
-        `;
-        document.head.appendChild(style);
+function getAdMobPlugin() {
+    return window.Capacitor && window.Capacitor.Plugins ? window.Capacitor.Plugins.AdMob : null;
+}
 
-        if (!document.getElementById('global-top-ad') && !document.getElementById('top-ad-header')) {
-            const topBar = document.createElement('div');
-            topBar.id = 'global-top-ad';
-            topBar.appendChild(createBannerFrame());
-            document.body.appendChild(topBar);
+async function initAdMobEngine() {
+    const AdMob = getAdMobPlugin();
+    if (!AdMob) return;
+
+    try {
+        if (!admobInitialized) {
+            await AdMob.initialize({
+                requestTrackingAuthorization: true,
+                testingDevices: [],
+                initializeForTesting: USE_TEST_ADS
+            });
+            admobInitialized = true;
         }
 
-        if (!document.getElementById('global-bottom-ad') && !document.getElementById('bottom-ad-footer')) {
-            const botBar = document.createElement('div');
-            botBar.id = 'global-bottom-ad';
-            botBar.appendChild(createBannerFrame());
-            document.body.appendChild(botBar);
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initAdsterraUI);
-    } else {
-        initAdsterraUI();
+        await showAdMobBottomBanner();
+        preloadAdMobInterstitial();
+        preloadAdMobRewarded();
+    } catch (err) {
+        console.warn('AdMob Init Error:', err);
     }
 }
 
-window.showPostMatchSocialAd = function() {
-    if (document.getElementById('post-match-ad-overlay')) return;
+async function showAdMobBottomBanner() {
+    const AdMob = getAdMobPlugin();
+    if (!AdMob || isBannerShowing) return;
 
-    const overlay = document.createElement('div');
-    overlay.id = 'post-match-ad-overlay';
-    overlay.style.cssText = `
-        position: fixed; inset: 0; width: 100vw; height: 100vh;
-        background: rgba(3, 7, 18, 0.85); z-index: 2147483647;
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-    `;
+    try {
+        await AdMob.showBanner({
+            adId: ADMOB_UNITS.bannerId,
+            adSize: 'ADAPTIVE_BANNER', // Full screen width banner
+            position: 'BOTTOM_CENTER',
+            margin: 0,
+            isTesting: USE_TEST_ADS
+        });
+        isBannerShowing = true;
+    } catch (err) {
+        console.warn('AdMob Banner Error:', err);
+    }
+}
 
-    const closeBtn = document.createElement('button');
-    closeBtn.innerText = '✕ CLOSE AD';
-    closeBtn.style.cssText = `
-        position: absolute; top: 18px; right: 16px; z-index: 2147483647;
-        background: #ef4444; color: #fff; border: 2px solid #fff;
-        padding: 8px 14px; border-radius: 20px; font-weight: 800; font-size: 12px;
-        cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    `;
-    closeBtn.onclick = () => overlay.remove();
+async function preloadAdMobInterstitial() {
+    const AdMob = getAdMobPlugin();
+    if (!AdMob || isInterstitialLoaded) return;
 
-    const adFrame = document.createElement('iframe');
-    adFrame.style.cssText = 'width: 100vw; height: 100vh; border: none; background: transparent;';
-    adFrame.srcdoc = `<!DOCTYPE html>
-    <html>
-    <head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-    <body style="margin:0;padding:0;width:100vw;height:100vh;overflow:hidden;background:transparent;">
-        <script data-cfasync="false" src="https://bauval.org/14/63d9d3f5a205abf1ec43607647d12b6a"><\/script>
-    </body>
-    </html>`;
+    try {
+        await AdMob.prepareInterstitial({
+            adId: ADMOB_UNITS.interstitialId,
+            isTesting: USE_TEST_ADS
+        });
+        isInterstitialLoaded = true;
+    } catch (err) {
+        isInterstitialLoaded = false;
+    }
+}
 
-    overlay.appendChild(adFrame);
-    overlay.appendChild(closeBtn);
-    document.body.appendChild(overlay);
+async function preloadAdMobRewarded() {
+    const AdMob = getAdMobPlugin();
+    if (!AdMob || isRewardedLoaded) return;
+
+    try {
+        await AdMob.prepareRewardVideoAd({
+            adId: ADMOB_UNITS.rewardedId,
+            isTesting: USE_TEST_ADS
+        });
+        isRewardedLoaded = true;
+    } catch (err) {
+        isRewardedLoaded = false;
+    }
+}
+
+window.showAdMobInterstitial = async function () {
+    const AdMob = getAdMobPlugin();
+    if (!AdMob) return false;
+
+    try {
+        if (!isInterstitialLoaded) {
+            await preloadAdMobInterstitial();
+        }
+        if (isInterstitialLoaded) {
+            await AdMob.showInterstitial();
+            isInterstitialLoaded = false;
+            setTimeout(preloadAdMobInterstitial, 2000);
+            return true;
+        }
+    } catch (err) {
+        isInterstitialLoaded = false;
+    }
+    return false;
 };
+
+window.showPostMatchSocialAd = function () {
+    window.showAdMobInterstitial();
+};
+
+window.showAdMobRewarded = async function (onRewardEarned) {
+    const AdMob = getAdMobPlugin();
+    if (!AdMob) {
+        if (typeof onRewardEarned === 'function') onRewardEarned();
+        return;
+    }
+
+    try {
+        if (!isRewardedLoaded) {
+            await preloadAdMobRewarded();
+        }
+        const rewardItem = await AdMob.showRewardVideoAd();
+        isRewardedLoaded = false;
+        setTimeout(preloadAdMobRewarded, 2000);
+
+        if (rewardItem && typeof onRewardEarned === 'function') {
+            onRewardEarned();
+        }
+    } catch (err) {
+        isRewardedLoaded = false;
+        await window.showAdMobInterstitial();
+        if (typeof onRewardEarned === 'function') onRewardEarned();
+    }
+};
+
+document.addEventListener('deviceready', initAdMobEngine);
+window.addEventListener('load', () => {
+    setTimeout(initAdMobEngine, 800);
+});

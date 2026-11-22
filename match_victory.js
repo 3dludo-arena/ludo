@@ -1,15 +1,19 @@
 // ========================================================
-// MATCH VICTORY & SMARTLINK MONETIZATION MODULE
+// MATCH VICTORY & 100% GOOGLE ADMOB MODULE
 // ========================================================
 
 (function initMatchVictorySystem() {
-    const SMARTLINK_URL = "https://asiafilm.org/4/954a104b8139a43df248e2b88ce49bf6";
     let finishedRankings = [];
 
     function wipeSavedMatchData() {
         try {
             Object.keys(localStorage).forEach(key => {
-                if (key !== 'ludo_user_profile_v4' && !key.toLowerCase().includes('profile')) {
+                if (
+                    key !== 'ludo_user_profile_v4' &&
+                    key !== 'ludo_onboarding_completed_v1' &&
+                    !key.toLowerCase().includes('profile') &&
+                    !key.toLowerCase().includes('onboarding')
+                ) {
                     localStorage.removeItem(key);
                 }
             });
@@ -92,23 +96,17 @@
         document.getElementById('vic-home-trigger-btn').addEventListener('click', handleExitWithAd);
     }
 
-    function handleExitWithAd() {
-        // Purana finished match clear karo taaki dubara resume na ho
+    async function handleExitWithAd() {
         wipeSavedMatchData();
 
-        // Modal hide karo
         const modal = document.getElementById('victory-popup-modal');
         if (modal) modal.style.display = 'none';
 
-        // Full Screen Monetized Smartlink Campaign Trigger
-        try {
-            window.open(SMARTLINK_URL, '_blank');
-        } catch(e) {}
+        if (typeof window.showAdMobInterstitial === 'function') {
+            try { await window.showAdMobInterstitial(); } catch (e) {}
+        }
 
-        // Safe redirect to main menu
-        setTimeout(() => {
-            window.location.href = 'index.html';
-        }, 400);
+        window.location.href = 'index.html';
     }
 
     // Dynamic Finish Trigger Function
@@ -130,17 +128,17 @@
             } catch(e) {}
         }
 
-        const allColors = ["Yellow", "Red", "Green", "Blue"];
-        const ranks = [...finishedRankings];
+        const allColors = ["YELLOW", "RED", "GREEN", "BLUE"];
+        const ranks = [...finishedRankings.map(r => r.toUpperCase())];
         for (let col of allColors) {
             if (!ranks.includes(col) && ranks.length < 3) {
                 ranks.push(col);
             }
         }
 
-        document.getElementById('vic-rank-1').innerText = (ranks[0] || "Winner").toUpperCase();
-        document.getElementById('vic-rank-2').innerText = (ranks[1] || "Runner Up").toUpperCase();
-        document.getElementById('vic-rank-3').innerText = (ranks[2] || "3rd Position").toUpperCase();
+        document.getElementById('vic-rank-1').innerText = ranks[0] || "WINNER";
+        document.getElementById('vic-rank-2').innerText = ranks[1] || "RUNNER UP";
+        document.getElementById('vic-rank-3').innerText = ranks[2] || "3RD POSITION";
 
         document.getElementById('victory-popup-modal').style.display = 'flex';
     };

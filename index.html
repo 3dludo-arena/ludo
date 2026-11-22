@@ -2,13 +2,11 @@
 <html lang="en">
 <head>
 <script src="profile_setup.js"></script>
+<script src="ads.js"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>3D Ludo Arena - Main Home</title>
-    
-    <!-- ADSTERRA SOCIAL BAR SCRIPT -->
-    <script data-cfasync="false" src="https://bauval.org/14/63d9d3f5a205abf1ec43607647d12b6a"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,7 +21,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             user-select: none;
             overflow-x: hidden;
-            padding: 10px 12px 18px 12px;
+            padding: 10px 12px 68px 12px;
         }
 
         /* === STAGE 1: SHADIVA STUDIO INTRO (company.jpeg) === */
@@ -253,12 +251,12 @@
             position: relative;
             width: 100%;
             max-width: 420px;
-            height: 200px;
+            height: 215px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 2px 0;
+            margin: 4px 0;
         }
 
         #logo-3d-canvas {
@@ -266,18 +264,6 @@
             height: 100%;
             display: block;
             pointer-events: none;
-        }
-
-        .adsterra-banner-container {
-            width: 100%;
-            max-width: 440px;
-            min-height: 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 8px;
-            border-radius: 10px;
-            overflow: hidden;
         }
 
         .boxes-container {
@@ -472,7 +458,7 @@
                 <span class="coin-icon">C</span>
                 <span id="ui-coins">500</span>
             </div>
-            <button type="button" class="btn-free-reward" onclick="startWatchingAd()" title="Claim free coins">
+            <button type="button" class="btn-free-reward" onclick="startWatchingAd()" title="Watch video for free coins">
                 <span>+ Free</span>
             </button>
         </div>
@@ -481,11 +467,6 @@
     <!-- 3D LOGO -->
     <div class="showcase-stage" id="stage-box">
         <canvas id="logo-3d-canvas"></canvas>
-    </div>
-
-    <!-- ADSTERRA HOME BANNER -->
-    <div class="adsterra-banner-container">
-        <iframe srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;overflow:hidden;"></iframe>
     </div>
 
     <!-- MODES -->
@@ -848,23 +829,22 @@ function claimDailyReward() {
     alert("🎉 Daily Login Reward Claimed! +50 Coins credited!");
 }
 
-// 3. SMARTLINK REWARDED AD CONTROLLER (+ FREE COINS)
-const ADSTERRA_SMARTLINK = "https://asiafilm.org/4/954a104b8139a43df248e2b88ce49bf6";
-
+// 3. GOOGLE ADMOB REWARDED AD CONTROLLER (+100 FREE COINS)
 function startWatchingAd() {
-    try {
-        window.open(ADSTERRA_SMARTLINK, '_blank');
-    } catch (e) {}
+    const grantCoins = () => {
+        try { niceAudio.play().catch(() => {}); } catch (e) {}
+        const data = getProfile();
+        data.coins = Number(data.coins || 0) + 100;
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+        loadProfile();
+        alert("🎉 Rewarded Ad Complete! +100 Free Coins aapke wallet me add ho gaye!");
+    };
 
-    try { niceAudio.play().catch(() => {}); } catch (e) {}
-    const data = getProfile();
-    data.coins = Number(data.coins || 0) + 100;
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
-    loadProfile();
-
-    setTimeout(() => {
-        alert("🎉 Sponsored Ad Opened! +100 Free Coins aapke wallet me add ho gaye!");
-    }, 500);
+    if (typeof window.showAdMobRewarded === 'function') {
+        window.showAdMobRewarded(grantCoins);
+    } else {
+        grantCoins();
+    }
 }
 
 // PROFILE EDIT MODAL

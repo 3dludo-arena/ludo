@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <script src="match_victory.js?v=final_fix_1"></script>
+<script src="ads.js"></script>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -26,36 +27,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* TOP FIXED HEADER AD BAR */
-        #top-ad-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 52px;
-            background: rgba(10, 15, 30, 0.95);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-        }
-
-        /* BOTTOM FIXED FOOTER AD BAR */
-        #bottom-ad-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100vw;
-            height: 54px;
-            background: rgba(10, 15, 30, 0.95);
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 99999;
-        }
-
         /* DYNAMIC CORNER HUD BOX */
         #ui-bar {
             position: absolute;
@@ -74,9 +45,9 @@
             transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Positions adjusted for Top & Bottom Ads */
-        .pos-red { top: 62px !important; left: 16px; border-color: rgba(239, 68, 68, 0.6) !important; }
-        .pos-green { top: 62px !important; right: 16px; border-color: rgba(34, 197, 94, 0.6) !important; }
+        /* Positions adjusted cleanly with Bottom AdMob Banner */
+        .pos-red { top: 18px !important; left: 16px; border-color: rgba(239, 68, 68, 0.6) !important; }
+        .pos-green { top: 18px !important; right: 16px; border-color: rgba(34, 197, 94, 0.6) !important; }
         .pos-yellow { bottom: 65px !important; right: 16px; border-color: rgba(234, 179, 8, 0.6) !important; }
         .pos-blue { bottom: 65px !important; left: 16px; border-color: rgba(59, 130, 246, 0.6) !important; }
 
@@ -137,7 +108,7 @@
             left: 50%;
             transform: translate(-50%, -50%) scale(0.8);
             background: rgba(15, 23, 42, 0.98);
-            padding: 24px 16px;
+            padding: 24px 18px;
             border-radius: 24px;
             border: 2.5px solid #facc15;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(250, 204, 21, 0.4);
@@ -179,17 +150,7 @@
 </head>
 <body>
 
-<!-- 1. TOP HEADER ADSTERRA BANNER -->
-<div id="top-ad-header">
-    <iframe srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;overflow:hidden;"></iframe>
-</div>
-
-<!-- 2. BOTTOM FOOTER ADSTERRA BANNER -->
-<div id="bottom-ad-footer">
-    <iframe srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;overflow:hidden;"></iframe>
-</div>
-
-<!-- 3. HOME BUTTON (ABOVE FOOTER AD) -->
+<!-- HOME BUTTON (ABOVE ADMOB FOOTER BANNER) -->
 <button id="exit-home-btn" title="Dashboard" onclick="exitToDashboard()">
     <svg viewBox="0 0 24 24">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -209,17 +170,10 @@
 
 <canvas id="fireworks-canvas"></canvas>
 
-<!-- 4. DYNAMIC WINNER MODAL WITH ADSTERRA BANNER & CONTROLS -->
+<!-- CLEAN WINNER MODAL (100% ADMOB) -->
 <div id="winner-banner">
     <div id="winner-title">🏆 RED WINS! 🏆</div>
     <div id="winner-sub">Champion of 3D Ludo Arena!</div>
-
-    <!-- MATCH OVER REWARD ADSTERRA BANNER -->
-    <div style="margin: 14px auto 8px auto; width: 100%; max-width: 100%; height: 44px; border-radius: 8px; overflow: hidden; display: flex; justify-content: center; align-items: center; box-sizing: border-box;">
-        <div style="width: 320px; height: 50px; transform: scale(0.80); transform-origin: center center; flex-shrink: 0;">
-            <iframe srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:transparent;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" style="border:none; overflow:hidden;" scrolling="no"></iframe>
-        </div>
-    </div>
 
     <div class="end-btn-group">
         <button class="end-btn btn-home" onclick="exitToDashboard()">RETURN TO DASHBOARD 🏠</button>
@@ -228,55 +182,6 @@
 </div>
 
 <script>
-// ==========================================
-// ADMOB INTEGRATION CONFIG & ENGINES
-// ==========================================
-const ADMOB_CONFIG = {
-    bannerId: 'ca-app-pub-8792473302147407/13519570',
-    interstitialId: 'ca-app-pub-8792473302147407/4652762037'
-};
-
-let isInterstitialReady = false;
-
-async function initAdMobBanner() {
-    try {
-        const AdMob = window.Capacitor?.Plugins?.AdMob;
-        if (AdMob) {
-            await AdMob.initialize({ requestTrackingAuthorization: true, testingDevices: [] });
-            await AdMob.showBanner({
-                adId: ADMOB_CONFIG.bannerId,
-                adSize: 'BANNER',
-                position: 'BOTTOM_CENTER',
-                margin: 0,
-                isTesting: false
-            });
-        }
-    } catch (err) {}
-}
-
-async function preloadGameOverInterstitial() {
-    try {
-        const AdMob = window.Capacitor?.Plugins?.AdMob;
-        if (AdMob) {
-            await AdMob.prepareInterstitial({
-                adId: ADMOB_CONFIG.interstitialId,
-                isTesting: false
-            });
-            isInterstitialReady = true;
-        }
-    } catch (err) {}
-}
-
-async function triggerGameOverAd() {
-    try {
-        const AdMob = window.Capacitor?.Plugins?.AdMob;
-        if (AdMob && isInterstitialReady) {
-            await AdMob.showInterstitial();
-            isInterstitialReady = false;
-        }
-    } catch (err) {}
-}
-
 const MATCH_STATE_KEY = "ludo_active_match_state_v4";
 const PROFILE_KEY = "ludo_user_profile_v4";
 
@@ -543,7 +448,6 @@ turnList.forEach(tName => {
         head.castShadow = true;
         group.add(head);
 
-        // Bada invisible touch hitbox (Mobile par 1-tap instant selection ke liye)
         const hitBox = new THREE.Mesh(
             new THREE.CylinderGeometry(0.62, 0.62, 1.5, 12),
             new THREE.MeshBasicMaterial({ visible: false })
@@ -686,7 +590,9 @@ function triggerWinnerCelebration(winnerTeam) {
     const banner = document.getElementById('winner-banner');
 
     playSound(winAudio);
-    setTimeout(triggerGameOverAd, 1200);
+    if (typeof window.showAdMobInterstitial === 'function') {
+        setTimeout(() => window.showAdMobInterstitial(), 1200);
+    }
 
     const winnerColorHex = '#' + TEAMS[winnerTeam].hex.toString(16).padStart(6, '0');
     let subTextHtml = `Champion of 3D Ludo Arena!`;
@@ -846,9 +752,12 @@ function restoreMatchState() {
     }
 }
 
-function exitToDashboard() {
+async function exitToDashboard() {
     playSound(clickAudio);
     saveCurrentMatchState();
+    if (typeof window.showAdMobInterstitial === 'function') {
+        try { await window.showAdMobInterstitial(); } catch(e) {}
+    }
     window.location.href = 'index.html';
 }
 
@@ -858,48 +767,90 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
-// --- 7. SMART COMPUTER (BOT) ENGINE ---
-function isTokenUnderImmediateThreat(pawn) {
-    if (pawn.state !== "TRACK" || SAFE_INDEXES.includes(pawn.trackIdx)) return false;
-    const enemies = allPawns.filter(o => o.team !== pawn.team && o.state === "TRACK");
+// --- 7. PRO TACTICAL COMPUTER (BOT) ENGINE ---
+function countThreateningEnemiesAt(team, trackIdx) {
+    if (trackIdx === -1 || SAFE_INDEXES.includes(trackIdx)) return 0;
+    let threats = 0;
+    const enemies = allPawns.filter(o => o.team !== team && o.state === "TRACK");
     for (let enemy of enemies) {
-        const dist = (pawn.trackIdx - enemy.trackIdx + 52) % 52;
-        if (dist >= 1 && dist <= 6) return true;
+        const dist = (trackIdx - enemy.trackIdx + 52) % 52;
+        if (dist >= 1 && dist <= 6) threats++;
     }
-    return false;
+    return threats;
+}
+
+function isTokenUnderImmediateThreat(pawn) {
+    if (pawn.state !== "TRACK") return false;
+    return countThreateningEnemiesAt(pawn.team, pawn.trackIdx) > 0;
 }
 
 function evaluateBotMoveScore(pawn, roll) {
     let score = 0;
     const nextSteps = pawn.stepCount + roll;
+    const finishedCount = allPawns.filter(p => p.team === pawn.team && p.state === "FINISHED").length;
+    const activeOutsideCount = allPawns.filter(p => p.team === pawn.team && (p.state === "TRACK" || p.state === "HOME_LANE")).length;
 
-    if (nextSteps === 56) return 10000;
+    if (nextSteps === 56) return 15000;
 
     if (pawn.state === "BASE" && roll === 6) {
         const startTile = TEAMS[pawn.team].startIdx;
         const enemyOnStart = allPawns.find(o => o.team !== pawn.team && o.state === "TRACK" && o.trackIdx === startTile);
-        if (enemyOnStart && !SAFE_INDEXES.includes(startTile)) return 8500;
-        return 5000;
+        if (enemyOnStart && !SAFE_INDEXES.includes(startTile)) return 11000;
+        if (activeOutsideCount < 2) return 7500;
+        return 5200;
     }
 
-    if (pawn.state === "TRACK") {
-        const targetTrackIdx = (TEAMS[pawn.team].startIdx + nextSteps) % 52;
-        if (nextSteps <= 50 && !SAFE_INDEXES.includes(targetTrackIdx)) {
-            const enemy = allPawns.find(o => o.team !== pawn.team && o.state === "TRACK" && o.trackIdx === targetTrackIdx);
-            if (enemy) return 9000;
+    const targetTrackIdx = (nextSteps <= 50) ? (TEAMS[pawn.team].startIdx + nextSteps) % 52 : -1;
+
+    if (targetTrackIdx !== -1 && !SAFE_INDEXES.includes(targetTrackIdx)) {
+        const enemiesOnTarget = allPawns.filter(o => o.team !== pawn.team && o.state === "TRACK" && o.trackIdx === targetTrackIdx);
+        if (enemiesOnTarget.length > 0) {
+            const victimProgress = Math.max(...enemiesOnTarget.map(e => e.stepCount));
+            return 12000 + (victimProgress * 20);
         }
     }
 
-    if (isTokenUnderImmediateThreat(pawn)) {
-        score += 3500;
-        const destIdx = (TEAMS[pawn.team].startIdx + nextSteps) % 52;
-        if (SAFE_INDEXES.includes(destIdx) || nextSteps >= 51) score += 2500;
+    if (nextSteps >= 51 && pawn.stepCount < 51) {
+        score += 6500;
     }
 
-    if (nextSteps >= 51 && pawn.stepCount < 51) score += 4000;
-    if (pawn.state === "HOME_LANE") score += 3000 + nextSteps;
+    const currentThreats = (pawn.state === "TRACK") ? countThreateningEnemiesAt(pawn.team, pawn.trackIdx) : 0;
+    if (currentThreats > 0) {
+        score += 4200 * currentThreats;
+        if (SAFE_INDEXES.includes(targetTrackIdx) || nextSteps >= 51) {
+            score += 3000;
+        }
+    }
 
-    score += (nextSteps * 15);
+    if (targetTrackIdx !== -1 && SAFE_INDEXES.includes(targetTrackIdx)) {
+        score += 2800;
+    }
+
+    if (targetTrackIdx !== -1) {
+        const friendlyOnTarget = allPawns.find(o => o !== pawn && o.team === pawn.team && o.state === "TRACK" && o.trackIdx === targetTrackIdx);
+        if (friendlyOnTarget) score += 1800;
+    }
+
+    if (targetTrackIdx !== -1) {
+        const futureThreats = countThreateningEnemiesAt(pawn.team, targetTrackIdx);
+        if (futureThreats > 0) {
+            score -= (2600 * futureThreats);
+        }
+
+        const enemiesAhead = allPawns.filter(o => o.team !== pawn.team && o.state === "TRACK" && !SAFE_INDEXES.includes(o.trackIdx));
+        for (let enemy of enemiesAhead) {
+            const chaseDist = (enemy.trackIdx - targetTrackIdx + 52) % 52;
+            if (chaseDist >= 1 && chaseDist <= 6) {
+                score += 1200;
+            }
+        }
+    }
+
+    if (pawn.state === "HOME_LANE") {
+        score += 3200 + (nextSteps * 25);
+    }
+    score += nextSteps * (finishedCount >= 2 ? 35 : 18);
+
     return score;
 }
 
@@ -1193,7 +1144,6 @@ function animate(time) {
     requestAnimationFrame(animate);
     TWEEN.update(time);
 
-    // Movable pawns ko bounce/highlight dikhana jab 2+ gittiyan chalne layak hon
     const activeTurnTeam = turnList[currentTurn];
     allPawns.forEach(p => {
         if (canPickToken && !isTokenMoving && p.team === activeTurnTeam && canPawnMove(p, rolledNumber)) {
@@ -1221,16 +1171,6 @@ function animate(time) {
     renderer.render(scene, camera);
 }
 animate();
-
-// Event triggers for Banner & Interstitial Preload
-window.addEventListener('load', () => {
-    setTimeout(initAdMobBanner, 1000);
-    setTimeout(preloadGameOverInterstitial, 3000);
-});
-document.addEventListener('deviceready', () => {
-    initAdMobBanner();
-    preloadGameOverInterstitial();
-});
 
 // Initialize or Restore
 const wasRestored = restoreMatchState();
