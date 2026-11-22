@@ -703,19 +703,11 @@ function setVoiceBadge(statusText) {
 function attachRemoteStream(stream) {
     const remoteAudio = document.getElementById('remote-audio');
     if (!remoteAudio) return;
+    if (remoteAudio.srcObject === stream) return;
+
     remoteAudio.srcObject = stream;
     remoteAudio.muted = false;
-    remoteAudio.volume = 1.0;
-
-    try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-            const ctx = new AudioCtx();
-            if (ctx.state === 'suspended') ctx.resume();
-            const src = ctx.createMediaStreamSource(stream);
-            src.connect(ctx.destination);
-        }
-    } catch (e) {}
+    remoteAudio.volume = 0.85;
 
     remoteAudio.play().catch(() => {
         const unlock = () => {
@@ -724,6 +716,7 @@ function attachRemoteStream(stream) {
         };
         window.addEventListener('pointerdown', unlock);
     });
+
 }
 
 async function flushIceQueue() {
