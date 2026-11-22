@@ -393,6 +393,13 @@
             color: #fff; font-size: 14px; font-weight: 700; outline: none; width: 100%;
         }
 
+        .code-input {
+            padding: 14px; background: #020617;
+            border: 2px solid #38bdf8; border-radius: 14px;
+            color: #facc15; font-size: 24px; font-weight: 900;
+            letter-spacing: 8px; text-align: center; outline: none; width: 100%;
+        }
+
         .modal-btns { display: flex; gap: 10px; margin-top: 4px; }
         .btn-modal-save { flex: 1; padding: 11px; background: #10b981; color: #fff; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; }
         .btn-modal-close { flex: 1; padding: 11px; background: #475569; color: #fff; border: none; border-radius: 10px; font-weight: 800; cursor: pointer; }
@@ -497,16 +504,30 @@
 
         <div class="mode-card" style="border-color: rgba(16, 185, 129, 0.45);">
             <div class="card-header-label">🌐 Online Multiplayer</div>
-            <div class="live-online-badge">🟢 LIVE • Free Live Voice Chat 🎙️</div>
+            <div class="live-online-badge">🟢 LIVE • Up to 4 Players + Voice Chat 🎙️</div>
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 2px;">
-                <button type="button" class="main-btn btn-create-online" onclick="window.location.href='online_lobby.html'">
+                <button type="button" class="main-btn btn-create-online" onclick="window.location.href='waiting.html?mode=create'">
                     <span>➕ Create Room</span>
                     <span class="tag">FREE 🎲</span>
                 </button>
-                <button type="button" class="main-btn btn-join-online" onclick="window.location.href='online_lobby.html'">
+                <button type="button" class="main-btn btn-join-online" onclick="openJoinCodeModal()">
                     <span>🔗 Join Room</span>
                     <span class="tag">4-Digit Code</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JOIN ROOM 4-DIGIT CODE POPUP -->
+    <div id="join-code-modal" class="modal-overlay">
+        <div class="modal-card" style="border-color: #38bdf8;">
+            <div style="font-size:34px;">🔗</div>
+            <div class="modal-title">Join Online Room</div>
+            <p style="font-size:12px; color:#94a3b8;">Apne dost ka 4-digit Room Code daalein:</p>
+            <input type="tel" id="join-room-input" class="code-input" maxlength="4" placeholder="1234" inputmode="numeric">
+            <div class="modal-btns">
+                <button type="button" class="btn-modal-save" onclick="submitJoinRoomCode()">JOIN 🚀</button>
+                <button type="button" class="btn-modal-close" onclick="closeJoinCodeModal()">CANCEL</button>
             </div>
         </div>
     </div>
@@ -554,42 +575,6 @@
         </div>
     </div>
 
-    <!-- FULL SCREEN REWARDED VIDEO AD STAGE -->
-    <div id="ad-modal" class="modal-overlay" style="padding:0; background:#020617; z-index:99999;">
-        <div style="position:relative; width:100vw; height:100vh; max-width:440px; background:radial-gradient(circle at center, #0f172a 0%, #020617 100%); display:flex; flex-direction:column; justify-content:space-between; align-items:center; padding:20px 16px; box-sizing:border-box;">
-            
-            <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
-                <div style="background:rgba(15,23,42,0.85); border:1px solid #334155; padding:6px 14px; border-radius:20px; font-size:12px; font-weight:800; color:#94a3b8; letter-spacing:1px;">
-                    SPONSORED REWARD AD
-                </div>
-                <button id="ad-cross-btn" type="button" onclick="closeAdAndReward()" style="display:none; width:38px; height:38px; border-radius:50%; background:#ef4444; color:#fff; border:2px solid #ffffff; font-size:18px; font-weight:900; cursor:pointer; align-items:center; justify-content:center; box-shadow:0 0 16px rgba(239,68,68,0.85); z-index:20;">✕</button>
-            </div>
-
-            <div style="width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; margin:auto 0;">
-                <div style="font-size:38px; filter:drop-shadow(0 0 10px #f59e0b);">🎬</div>
-                <div id="ad-status-msg" style="font-size:15px; color:#facc15; font-weight:800; text-align:center;">
-                    Ad chal rahi hai... Reward in: <span id="ad-sec-count" style="color:#38bdf8; font-size:22px; font-weight:900;">30</span>s
-                </div>
-
-                <div style="width:100%; max-width:320px; height:60px; background:#000; border:1px solid #334155; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 25px rgba(0,0,0,0.8);">
-                    <iframe id="ad-iframe-1" srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:#000;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;"></iframe>
-                </div>
-
-                <div style="width:100%; max-width:320px; height:60px; background:#000; border:1px solid #334155; border-radius:12px; overflow:hidden; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 25px rgba(0,0,0,0.8);">
-                    <iframe id="ad-iframe-2" srcdoc="<!DOCTYPE html><html><body style='margin:0;padding:0;display:flex;justify-content:center;align-items:center;background:#000;'><script type='text/javascript'>atOptions={'key':'22fbc927b270735d5340af7fbb42a9d0','format':'iframe','height':50,'width':320,'params':{}};</script><script type='text/javascript' src='https://bauval.org/22/22fbc927b270735d5340af7fbb42a9d0'></script></body></html>" width="320" height="50" frameborder="0" scrolling="no" style="border:none;"></iframe>
-                </div>
-
-                <div style="font-size:12px; color:#94a3b8; font-weight:700;">Reward: <span style="color:#34d399;">+100 Gold Coins</span></div>
-            </div>
-
-            <div style="width:100%; max-width:360px;">
-                <button id="ad-claim-btn" type="button" disabled style="background:#1e293b; color:#64748b; border:1px solid #334155; padding:14px; font-size:15px; font-weight:800; border-radius:16px; width:100%; cursor:not-allowed; box-shadow:none;">
-                    ⏳ Please Wait (30s)...
-                </button>
-            </div>
-        </div>
-    </div>
-
 <script>
 // --- 2-STAGE STUDIO + GAME SPLASH CONTROLLER ---
 window.addEventListener('DOMContentLoaded', () => {
@@ -604,17 +589,36 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     sessionStorage.setItem('splashShown', 'true');
 
-    // 2.2 second baad company.jpeg fade out hoga aur logo.png + Disclaimer aayega
     setTimeout(() => {
         if (studioSplash) studioSplash.classList.add('hide');
         if (splashBar) splashBar.classList.add('run');
     }, 2200);
 
-    // 5.2 second par main dashboard open ho jayega
     setTimeout(() => {
         if (brandSplash) brandSplash.classList.add('hide');
     }, 5200);
 });
+
+// --- JOIN CODE POPUP HANDLERS ---
+function openJoinCodeModal() {
+    const inp = document.getElementById('join-room-input');
+    inp.value = '';
+    document.getElementById('join-code-modal').style.display = 'flex';
+    setTimeout(() => inp.focus(), 100);
+}
+
+function closeJoinCodeModal() {
+    document.getElementById('join-code-modal').style.display = 'none';
+}
+
+function submitJoinRoomCode() {
+    const code = document.getElementById('join-room-input').value.trim();
+    if (!/^\d{4}$/.test(code)) {
+        alert("Kripya sahi 4-digit Room Code daalein!");
+        return;
+    }
+    window.location.href = `waiting.html?mode=join&room=${code}`;
+}
 
 // --- AUDIO FX ---
 const clickAudio = new Audio('click.mp3'); clickAudio.preload = 'auto';
@@ -805,9 +809,13 @@ function startPaidGame(redirectUrl) {
     data.coins -= 50;
     localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
 
-    // Naya match start karne se pehle purana saved/finished match state clear karein
     Object.keys(localStorage).forEach(key => {
-        if (key !== PROFILE_KEY && !key.toLowerCase().includes('profile')) {
+        if (
+            key !== PROFILE_KEY &&
+            key !== 'ludo_onboarding_completed_v1' &&
+            !key.toLowerCase().includes('profile') &&
+            !key.toLowerCase().includes('onboarding')
+        ) {
             localStorage.removeItem(key);
         }
     });
@@ -850,7 +858,7 @@ function startWatchingAd() {
 
     try { niceAudio.play().catch(() => {}); } catch (e) {}
     const data = getProfile();
-    data.coins = Number(data.coins || 0) +100;
+    data.coins = Number(data.coins || 0) + 100;
     localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
     loadProfile();
 

@@ -5,7 +5,7 @@
 <script src="ads.js?v=social1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Ludo Online Match</title>
+    <title>3D Ludo Online Match (4-Player)</title>
     <script src="capacitor.js"></script>
     <style>
         * { box-sizing: border-box; }
@@ -35,8 +35,10 @@
             display: flex; flex-direction: column; gap: 4px; width: 150px;
             transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        .pos-red { top: 62px !important; left: 12px; border-color: rgba(239, 68, 68, 0.6) !important; }
-        .pos-yellow { bottom: 66px !important; right: 12px; border-color: rgba(234, 179, 8, 0.6) !important; }
+        .pos-red    { top: 62px !important; left: 12px; border-color: rgba(239, 68, 68, 0.7) !important; }
+        .pos-green  { top: 108px !important; right: 12px; border-color: rgba(34, 197, 94, 0.7) !important; }
+        .pos-yellow { bottom: 66px !important; right: 12px; border-color: rgba(234, 179, 8, 0.7) !important; }
+        .pos-blue   { bottom: 118px !important; left: 12px; border-color: rgba(59, 130, 246, 0.7) !important; }
 
         .turn-title { font-size: 9px; text-transform: uppercase; letter-spacing: 1.2px; color: #94a3b8; font-weight: 700; }
         .turn-row { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 6px; }
@@ -51,7 +53,7 @@
         #roll-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
         #dice-result { font-size: 11.5px; color: #cbd5e1; font-weight: bold; }
 
-        /* CLEAN NON-OVERLAPPING COMPACT VOICE CHAT UI */
+        /* COMPACT VOICE CHAT UI */
         #voice-panel {
             position: fixed; top: 62px; right: 12px; z-index: 100000;
             display: flex; align-items: center; gap: 6px;
@@ -137,7 +139,7 @@
 <div id="winner-banner">
     <div id="winner-title">🏆 RED WINS! 🏆</div>
     <div id="winner-sub">Online Match Over!</div>
-    <button class="end-btn" onclick="window.location.href='home.html'">RETURN TO DASHBOARD 🏠</button>
+    <button class="end-btn" onclick="window.location.href='index.html'">RETURN TO DASHBOARD 🏠</button>
 </div>
 
 <script type="module">
@@ -162,7 +164,15 @@ const roomCode = urlParams.get('room') || '0000';
 const myTeam = (urlParams.get('team') || 'RED').toUpperCase();
 const oppTeam = (myTeam === 'RED') ? 'YELLOW' : 'RED';
 
-document.getElementById('room-badge').innerText = `${roomCode} • WAIT`;
+// Dynamic 2, 3, or 4 Players from waiting room
+const VALID_TEAMS = ["RED", "GREEN", "YELLOW", "BLUE"];
+const playersParam = urlParams.get('players');
+let turnList = playersParam
+    ? playersParam.split(',').map(t => t.trim().toUpperCase()).filter(t => VALID_TEAMS.includes(t))
+    : ["RED", "YELLOW"];
+if (turnList.length < 2) turnList = ["RED", "YELLOW"];
+
+document.getElementById('room-badge').innerText = `${roomCode} • ${turnList.length}P`;
 document.getElementById('you-label').innerText = `YOU: ${myTeam}`;
 
 const eventsRef = ref(db, `rooms/${roomCode}/events`);
@@ -203,7 +213,6 @@ function playSound(audio) {
 }
 
 // --- 3D SCENE & AUTO-FIT CAMERA ---
-const turnList = ["RED", "YELLOW"];
 const SAFE_INDEXES = [0, 8, 13, 21, 26, 34, 39, 47];
 
 const scene = new THREE.Scene();
@@ -319,10 +328,12 @@ HOME_RUNS.YELLOW.forEach(p => renderTile(p, C_YELLOW));
 HOME_RUNS.GREEN.forEach(p => renderTile(p, C_GREEN));
 HOME_RUNS.BLUE.forEach(p => renderTile(p, C_BLUE));
 
-// --- TOKENS ---
+// --- ALL 4 TEAMS CONFIG ---
 const TEAMS = {
-    RED: { hex: C_RED, startIdx: 0, homeBase: [-4.4, -4.4] },
-    YELLOW: { hex: C_YELLOW, startIdx: 26, homeBase: [4.4, 4.4] }
+    RED:    { hex: C_RED,    startIdx: 0,  homeBase: [-4.4, -4.4], posClass: 'pos-red' },
+    GREEN:  { hex: C_GREEN,  startIdx: 13, homeBase: [ 4.4, -4.4], posClass: 'pos-green' },
+    YELLOW: { hex: C_YELLOW, startIdx: 26, homeBase: [ 4.4,  4.4], posClass: 'pos-yellow' },
+    BLUE:   { hex: C_BLUE,   startIdx: 39, homeBase: [-4.4,  4.4], posClass: 'pos-blue' }
 };
 const offsets = [[-1.1, -1.1], [1.1, -1.1], [-1.1, 1.1], [1.1, 1.1]];
 const allPawns = [], clickableMeshes = [];
@@ -396,7 +407,7 @@ function rearrangeTileTokens(trackIdx) {
 }
 
 // --- SIMULTANEOUS TIMESTAMP SYNC ENGINE ---
-let currentTurn = 0; // 0 = RED, 1 = YELLOW
+let currentTurn = 0;
 let rolledNumber = 0;
 let canPickToken = false;
 let isTokenMoving = false;
@@ -419,8 +430,8 @@ const ludoDice = new LudoDice(scene, (val) => {
     const activeTeam = turnList[currentTurn];
 
     if (activeTeam !== myTeam) {
-        const oppValid = allPawns.filter(p => p.team === oppTeam && canPawnMove(p, rolledNumber));
-        if (oppValid.length === 0) {
+        const activeValid = allPawns.filter(p => p.team === activeTeam && canPawnMove(p, rolledNumber));
+        if (activeValid.length === 0) {
             setTimeout(() => passTurn(false), 350);
         }
         return;
@@ -487,7 +498,7 @@ function updateTurnDisplay(team, isBonus) {
     uiBar.style.display = isMyTurn ? 'flex' : 'none';
 
     if (isMyTurn) {
-        uiBar.className = (team === "RED") ? 'pos-red' : 'pos-yellow';
+        uiBar.className = TEAMS[team].posClass;
         turnTxt.innerText = `${team} (YOU)`;
         turnDot.style.background = hexStr;
         rollBtn.style.background = hexStr;
@@ -640,7 +651,7 @@ function passTurn(extraRoll) {
 
 window.exitOnlineMatch = function() {
     if (confirm("Online match chhod kar wapas jana hai?")) {
-        window.location.href = 'home.html';
+        window.location.href = 'index.html';
     }
 };
 
@@ -652,7 +663,7 @@ let localStream = null;
 let isMicOn = false;
 let makingOffer = false;
 let ignoreOffer = false;
-const isPolite = (myTeam === 'YELLOW');
+const isPolite = (myTeam !== 'RED');
 const pendingIceCandidates = [];
 
 const MIC_ON_SVG = `<svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.91-3c-.49 0-.9.36-.98.85C16.52 14.2 14.47 16 12 16s-4.52-1.8-4.93-4.15c-.08-.49-.49-.85-.98-.85-.61 0-1.09.54-1 1.14.49 3 2.89 5.35 5.91 5.78V21h2v-3.08c3.02-.43 5.42-2.78 5.91-5.78.1-.6-.39-1.14-1-1.14z"/></svg>`;
@@ -749,7 +760,7 @@ window.addEventListener('online', () => {
 });
 
 async function initPerfectVoiceChat() {
-    setVoiceBadge('WAIT');
+    setVoiceBadge(`${turnList.length}P`);
 
     if (myTeam === 'RED') {
         await set(sigRef, null);
@@ -910,8 +921,9 @@ function animate(time) {
 animate();
 
 // Start Match
-ludoDice.moveToTeam("RED");
-updateTurnDisplay("RED", false);
+const firstTeam = turnList[0];
+ludoDice.moveToTeam(firstTeam);
+updateTurnDisplay(firstTeam, false);
 </script>
 
 <script src="match_victory.js"></script>
