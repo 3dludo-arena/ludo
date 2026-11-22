@@ -8,7 +8,7 @@ const ADMOB_UNITS = {
 };
 
 // ABHI TESTING KE LIYE true HAI — UPLOAD SE PEHLE false KARNA HAI!
-const USE_TEST_ADS = true;
+const USE_TEST_ADS = false;
 
 let admobInitialized = false;
 let isBannerShowing = false;
