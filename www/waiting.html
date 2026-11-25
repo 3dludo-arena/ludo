@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="ads.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D Ludo - Waiting Room</title>
+    <script src="capacitor.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 100%; height: 100%; overflow: hidden;
+            background: radial-gradient(circle at top, #1e3a8a 0%, #09132e 60%, #030712 100%);
+            font-family: 'Segoe UI', Tahoma, sans-serif; color: #fff;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            user-select: none;
+            padding: 10px 0 64px 0;
+        }
+        .main-wrap {
+            width: 100%; max-width: 400px; flex: 1; padding: 8px 16px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+        }
+        .top-nav {
+            width: 100%; display: flex; align-items: center; justify-content: space-between;
+        }
+        .back-btn {
+            background: rgba(15, 23, 42, 0.9); border: 1.5px solid rgba(255,255,255,0.2);
+            color: #fff; padding: 7px 12px; border-radius: 12px; font-size: 12px; font-weight: 800; cursor: pointer;
+        }
+        .title-badge {
+            font-size: 16px; font-weight: 900; color: #facc15; letter-spacing: 0.8px;
+            text-shadow: 0 2px 10px rgba(250, 204, 21, 0.4);
+        }
+        .room-box {
+            width: 100%; background: rgba(15, 23, 42, 0.9); border: 2px solid #38bdf8;
+            border-radius: 18px; padding: 12px 14px; text-align: center;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
+        }
+        .code-row {
+            display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 6px;
+        }
+        .code-label { font-size: 13px; font-weight: 800; color: #cbd5e1; }
+        .code-val {
+            background: #020617; border: 1.5px solid #facc15; color: #facc15;
+            font-size: 20px; font-weight: 900; letter-spacing: 3px; padding: 4px 12px; border-radius: 10px;
+        }
+        .icon-btn {
+            width: 34px; height: 34px; border-radius: 50%; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold;
+        }
+        .btn-copy { background: #2563eb; color: #fff; }
+        .btn-wa { background: #22c55e; color: #fff; }
+        .share-hint { font-size: 11px; color: #94a3b8; font-weight: 600; }
+
+        /* HOST CARD */
+        .host-card {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .avatar-box {
+            width: 72px; height: 72px; border-radius: 16px; background: #1e293b;
+            border: 3px solid #ef4444; display: flex; align-items: center; justify-content: center;
+            font-size: 38px; box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+        }
+        .player-name { font-size: 13px; font-weight: 800; color: #fff; }
+        .team-pill { font-size: 9px; font-weight: 900; padding: 2px 7px; border-radius: 6px; text-transform: uppercase; }
+
+        .vs-badge {
+            font-size: 24px; font-weight: 900; font-style: italic; color: #facc15;
+            text-shadow: 0 0 16px rgba(250, 204, 21, 0.8);
+        }
+
+        /* 3 OPPONENT SLOTS */
+        .opponents-grid {
+            width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+        }
+        .opp-slot {
+            background: rgba(15, 23, 42, 0.88); border: 2px dashed rgba(148, 163, 184, 0.4);
+            border-radius: 16px; padding: 10px 6px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 5px; min-height: 108px;
+            transition: all 0.25s ease;
+        }
+        .opp-slot.joined { border-style: solid; background: rgba(30, 41, 59, 0.95); }
+        .slot-avatar {
+            width: 48px; height: 48px; border-radius: 12px; background: rgba(255,255,255,0.06);
+            display: flex; align-items: center; justify-content: center; font-size: 26px; color: #94a3b8;
+        }
+        .slot-name { font-size: 11px; font-weight: 800; color: #cbd5e1; text-align: center; word-break: break-word; }
+
+        .bottom-action { width: 100%; text-align: center; }
+        #status-text { font-size: 12px; color: #38bdf8; font-weight: 700; margin-bottom: 8px; }
+        #play-now-btn {
+            display: none; width: 100%; padding: 14px; border: none; border-radius: 16px;
+            background: linear-gradient(135deg, #10b981, #059669); color: #fff;
+            font-size: 16px; font-weight: 900; letter-spacing: 0.8px; cursor: pointer;
+            box-shadow: 0 6px 22px rgba(16, 185, 129, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrap">
+    <div class="top-nav">
+        <button class="back-btn" onclick="leaveWaitingRoom()">← Exit</button>
+        <div class="title-badge">ONLINE MULTIPLAYER</div>
+        <div style="width:48px;"></div>
+    </div>
+
+    <div class="room-box">
+        <div class="code-row">
+            <span class="code-label">Room Code :</span>
+            <span class="code-val" id="display-code">----</span>
+            <button class="icon-btn btn-copy" onclick="copyRoomCode()" title="Copy Code">📋</button>
+            <button class="icon-btn btn-wa" onclick="shareWhatsApp()" title="Share on WhatsApp">💬</button>
+        </div>
+        <div class="share-hint">Share this room code with friends (Up to 4 Players)</div>
+    </div>
+
+    <!-- HOST (RED) -->
+    <div class="host-card">
+        <div class="avatar-box" id="host-avatar">🧑‍🎤</div>
+        <div class="player-name" id="host-name">Waiting...</div>
+        <span class="team-pill" style="background:#ef4444;">HOST • RED</span>
+    </div>
+
+    <div class="vs-badge">VS</div>
+
+    <!-- 3 OPPONENT SLOTS (GREEN, YELLOW, BLUE) -->
+    <div class="opponents-grid">
+        <div class="opp-slot" id="slot-GREEN">
+            <div class="slot-avatar" id="av-GREEN">👤+</div>
+            <div class="slot-name" id="nm-GREEN">Empty</div>
+            <span class="team-pill" style="background:#22c55e;color:#052e16;">GREEN</span>
+        </div>
+        <div class="opp-slot" id="slot-YELLOW">
+            <div class="slot-avatar" id="av-YELLOW">👤+</div>
+            <div class="slot-name" id="nm-YELLOW">Empty</div>
+            <span class="team-pill" style="background:#eab308;color:#422006;">YELLOW</span>
+        </div>
+        <div class="opp-slot" id="slot-BLUE">
+            <div class="slot-avatar" id="av-BLUE">👤+</div>
+            <div class="slot-name" id="nm-BLUE">Empty</div>
+            <span class="team-pill" style="background:#3b82f6;">BLUE</span>
+        </div>
+    </div>
+
+    <div class="bottom-action">
+        <div id="status-text">Waiting for friends to join...</div>
+        <button id="play-now-btn" onclick="startOnlineGame()">PLAY NOW 🚀</button>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC8cR6WMmZupaQ5f7LCbtsJFz_atiEHAkA",
+    authDomain: "d-ludo-online.firebaseapp.com",
+    databaseURL: "https://d-ludo-online-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "d-ludo-online",
+    storageBucket: "d-ludo-online.firebasestorage.app",
+    messagingSenderId: "119949893117",
+    appId: "1:119949893117:web:7a1ef3cc59951b6f088d94"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const params = new URLSearchParams(window.location.search);
+const mode = params.get('mode') || 'create';
+let roomCode = (params.get('room') || '').trim();
+
+let myProfile = { name: "Player", avatar: "🧑‍🎤" };
+try {
+    const saved = JSON.parse(localStorage.getItem("ludo_user_profile_v4") || "null");
+    if (saved && saved.name) myProfile = saved;
+} catch (e) {}
+
+const TEAM_ORDER = ["RED", "GREEN", "YELLOW", "BLUE"];
+let myTeam = "RED";
+
+async function initRoom() {
+    if (mode === 'create') {
+        roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        myTeam = "RED";
+        document.getElementById('display-code').innerText = roomCode;
+
+        const roomRef = ref(db, `rooms/${roomCode}`);
+        await set(roomRef, {
+            status: "waiting",
+            createdAt: Date.now(),
+            players: {
+                RED: { name: myProfile.name, avatar: myProfile.avatar || "🧑‍🎤" }
+            }
+        });
+    } else {
+        if (!roomCode || roomCode.length !== 4) {
+            alert("Sahi 4-digit Room Code daalein!");
+            window.location.href = "index.html";
+            return;
+        }
+        document.getElementById('display-code').innerText = roomCode;
+        const roomRef = ref(db, `rooms/${roomCode}`);
+        const snap = await get(roomRef);
+
+        if (!snap.exists()) {
+            alert("Ye Room Code galat hai ya room band ho chuka hai!");
+            window.location.href = "index.html";
+            return;
+        }
+        const roomData = snap.val();
+        if (roomData.status === "started") {
+            alert("Ye match pehle hi shuru ho chuka hai!");
+            window.location.href = "index.html";
+            return;
+        }
+
+        const existingPlayers = roomData.players || {};
+        const freeTeam = TEAM_ORDER.find(t => !existingPlayers[t]);
+        if (!freeTeam) {
+            alert("Room already full (Max 4 Players)!");
+            window.location.href = "index.html";
+            return;
+        }
+
+        myTeam = freeTeam;
+        await update(ref(db, `rooms/${roomCode}/players`), {
+            [myTeam]: { name: myProfile.name, avatar: myProfile.avatar || "🥷" }
+        });
+    }
+
+    listenRoomUpdates();
+}
+
+function listenRoomUpdates() {
+    const roomRef = ref(db, `rooms/${roomCode}`);
+    onValue(roomRef, (snap) => {
+        const data = snap.val();
+        if (!data) return;
+
+        const players = data.players || {};
+        const joinedTeams = TEAM_ORDER.filter(t => players[t]);
+
+        // Host (RED) UI
+        if (players.RED) {
+            document.getElementById('host-avatar').innerText = players.RED.avatar || "🧑‍🎤";
+            document.getElementById('host-name').innerText = players.RED.name;
+        }
+
+        // Opponents (GREEN, YELLOW, BLUE) UI
+        ["GREEN", "YELLOW", "BLUE"].forEach(team => {
+            const slotEl = document.getElementById(`slot-${team}`);
+            const avEl = document.getElementById(`av-${team}`);
+            const nmEl = document.getElementById(`nm-${team}`);
+            if (players[team]) {
+                slotEl.classList.add('joined');
+                slotEl.style.borderColor = team === "GREEN" ? "#22c55e" : (team === "YELLOW" ? "#eab308" : "#3b82f6");
+                avEl.innerText = players[team].avatar || "🥷";
+                nmEl.innerText = players[team].name;
+            } else {
+                slotEl.classList.remove('joined');
+                slotEl.style.borderColor = "rgba(148, 163, 184, 0.4)";
+                avEl.innerText = "👤+";
+                nmEl.innerText = "Empty";
+            }
+        });
+
+        const statusEl = document.getElementById('status-text');
+        const playBtn = document.getElementById('play-now-btn');
+
+        if (joinedTeams.length >= 2) {
+            if (myTeam === "RED") {
+                statusEl.innerText = `${joinedTeams.length} Players Ready! Match shuru karein:`;
+                playBtn.style.display = "block";
+            } else {
+                statusEl.innerText = `${joinedTeams.length} Players Joined! Host ke PLAY dabane ka wait...`;
+                playBtn.style.display = "none";
+            }
+        } else {
+            statusEl.innerText = "Kam se kam 1 aur player join hone ka wait karein...";
+            playBtn.style.display = "none";
+        }
+
+        // Host ne PLAY dabaya toh sabhi players game me jayenge
+        if (data.status === "started") {
+            const activeStr = (data.activeTeams || joinedTeams).join(',');
+            window.location.href = `online_game.html?room=${roomCode}&team=${myTeam}&players=${activeStr}`;
+        }
+    });
+}
+
+window.startOnlineGame = async function() {
+    const snap = await get(ref(db, `rooms/${roomCode}/players`));
+    const players = snap.val() || {};
+    const activeTeams = TEAM_ORDER.filter(t => players[t]);
+    if (activeTeams.length < 2) return;
+
+    await update(ref(db, `rooms/${roomCode}`), {
+        status: "started",
+        activeTeams: activeTeams
+    });
+};
+
+window.copyRoomCode = function() {
+    navigator.clipboard?.writeText(roomCode);
+    alert(`Room Code ${roomCode} copied!`);
+};
+
+window.shareWhatsApp = function() {
+    const text = `🎲 *3D Ludo Arena* me mere saath Live Online Ludo khelo!\n🔑 *Room Code:* ${roomCode}\n📥 Download Game: https://tinyurl.com/mr2ypet7`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+};
+
+window.leaveWaitingRoom = async function() {
+    try {
+        if (roomCode && myTeam) {
+            await remove(ref(db, `rooms/${roomCode}/players/${myTeam}`));
+        }
+    } catch (e) {}
+    window.location.href = "index.html";
+};
+
+initRoom();
+</script>
+</body>
+</html>
