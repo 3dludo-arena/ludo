@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="match_victory.js?v=final_fix_1"></script>
-<script src="ads.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>3D Ludo Arena</title>
     <script src="capacitor.js"></script>
+    <script src="match_victory.js?v=final_fix_1"></script>
+    <script src="ads.js"></script>
     <style>
         * { box-sizing: border-box; }
         html, body {
@@ -27,7 +26,6 @@
             -webkit-tap-highlight-color: transparent;
         }
 
-        /* DYNAMIC CORNER HUD BOX */
         #ui-bar {
             position: absolute;
             z-index: 20;
@@ -45,7 +43,6 @@
             transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
         }
 
-        /* Positions adjusted cleanly with Bottom AdMob Banner */
         .pos-red { top: 18px !important; left: 16px; border-color: rgba(239, 68, 68, 0.6) !important; }
         .pos-green { top: 18px !important; right: 16px; border-color: rgba(34, 197, 94, 0.6) !important; }
         .pos-yellow { bottom: 65px !important; right: 16px; border-color: rgba(234, 179, 8, 0.6) !important; }
@@ -73,7 +70,6 @@
         #roll-btn:disabled { background: #475569; cursor: not-allowed; box-shadow: none; transform: none; }
         #dice-result { font-size: 12px; color: #cbd5e1; font-weight: bold; }
 
-        /* FLOATING CIRCULAR BOTTOM HOME BUTTON */
         #exit-home-btn {
             position: fixed;
             bottom: 66px;
@@ -101,7 +97,6 @@
             pointer-events: none; z-index: 50; display: none;
         }
 
-        /* ENHANCED MATCH OVER / WINNER MODAL */
         #winner-banner {
             position: fixed;
             top: 50%;
@@ -150,7 +145,6 @@
 </head>
 <body>
 
-<!-- HOME BUTTON (ABOVE ADMOB FOOTER BANNER) -->
 <button id="exit-home-btn" title="Dashboard" onclick="exitToDashboard()">
     <svg viewBox="0 0 24 24">
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
@@ -170,7 +164,6 @@
 
 <canvas id="fireworks-canvas"></canvas>
 
-<!-- CLEAN WINNER MODAL (100% ADMOB) -->
 <div id="winner-banner">
     <div id="winner-title">🏆 RED WINS! 🏆</div>
     <div id="winner-sub">Champion of 3D Ludo Arena!</div>
@@ -184,6 +177,55 @@
 <script>
 const MATCH_STATE_KEY = "ludo_active_match_state_v4";
 const PROFILE_KEY = "ludo_user_profile_v4";
+
+// --- CLEAN ENGLISH OFFLINE / NO-INTERNET POPUP ---
+function showGameOfflinePopup() {
+    if (document.getElementById('game-offline-modal')) return;
+    const div = document.createElement('div');
+    div.id = 'game-offline-modal';
+    div.style.cssText = `
+        position: fixed; inset: 0; background: rgba(2, 6, 23, 0.94);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 2147483647; backdrop-filter: blur(12px); padding: 20px;
+    `;
+    div.innerHTML = `
+        <div style="
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border: 2px solid #ef4444; border-radius: 24px;
+            padding: 28px 22px; max-width: 340px; width: 100%; text-align: center;
+            color: #fff; font-family: 'Segoe UI', sans-serif;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+        ">
+            <div style="font-size: 46px; margin-bottom: 10px;">📡</div>
+            <h2 style="font-size: 20px; font-weight: 900; color: #f8fafc; margin-bottom: 8px;">
+                No Internet Connection
+            </h2>
+            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.55; margin-bottom: 22px;">
+                Please turn on your <strong>Mobile Data</strong> or <strong>Wi-Fi</strong> to load the 3D Arena and continue your match.
+            </p>
+            <button type="button" onclick="window.location.reload()" style="
+                width: 100%; padding: 13px; border: none; border-radius: 14px;
+                background: linear-gradient(135deg, #22c55e, #16a34a);
+                color: #fff; font-size: 15px; font-weight: 800; cursor: pointer;
+            ">RETRY CONNECTION 🔄</button>
+        </div>
+    `;
+    document.body.appendChild(div);
+}
+
+window.addEventListener('offline', showGameOfflinePopup);
+window.addEventListener('online', () => {
+    const m = document.getElementById('game-offline-modal');
+    if (m) m.remove();
+    if (typeof THREE === 'undefined' || typeof TWEEN === 'undefined') {
+        window.location.reload();
+    }
+});
+
+if (!navigator.onLine || typeof THREE === 'undefined' || typeof TWEEN === 'undefined') {
+    showGameOfflinePopup();
+    throw new Error("Waiting for internet connection");
+}
 
 // --- AUDIO EFFECTS SETUP ---
 const stepAudio = new Audio('step.mp3'); stepAudio.preload = 'auto';
@@ -230,6 +272,7 @@ const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerH
 
 function fitBoardCamera() {
     const aspect = window.innerWidth / window.innerHeight;
+    if (!aspect || isNaN(aspect)) return;
     const isPortrait = aspect < 1;
     camera.aspect = aspect;
     camera.fov = isPortrait ? 48 : 36;
@@ -246,10 +289,10 @@ function fitBoardCamera() {
 }
 fitBoardCamera();
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
 renderer.setClearColor(0x000000, 0);
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
@@ -699,7 +742,7 @@ function updateFireworks() {
     }
 }
 
-// --- 6. AUTO-SAVE & RESUME ENGINE ---
+// --- 6. AUTO-SAVE, RESUME & SCREEN SWITCH CRASH PROTECTION ---
 function saveCurrentMatchState() {
     try {
         const stateData = {
@@ -761,11 +804,41 @@ async function exitToDashboard() {
     window.location.href = 'index.html';
 }
 
+let isPageHidden = false;
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {
+        isPageHidden = true;
         saveCurrentMatchState();
+    } else {
+        isPageHidden = false;
+        setTimeout(() => {
+            try {
+                fitBoardCamera();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                resizeFwCanvas();
+                renderer.render(scene, camera);
+            } catch(e) {}
+        }, 120);
     }
 });
+
+window.addEventListener('pagehide', saveCurrentMatchState);
+window.addEventListener('blur', saveCurrentMatchState);
+
+renderer.domElement.addEventListener('webglcontextlost', (e) => {
+    e.preventDefault();
+    isPageHidden = true;
+    saveCurrentMatchState();
+}, false);
+
+renderer.domElement.addEventListener('webglcontextrestored', () => {
+    isPageHidden = false;
+    try {
+        fitBoardCamera();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.render(scene, camera);
+    } catch(e) {}
+}, false);
 
 // --- 7. PRO TACTICAL COMPUTER (BOT) ENGINE ---
 function countThreateningEnemiesAt(team, trackIdx) {
@@ -779,77 +852,100 @@ function countThreateningEnemiesAt(team, trackIdx) {
     return threats;
 }
 
-function isTokenUnderImmediateThreat(pawn) {
-    if (pawn.state !== "TRACK") return false;
-    return countThreateningEnemiesAt(pawn.team, pawn.trackIdx) > 0;
+function isEnemyBaseSpawnDanger(team, trackIdx) {
+    if (trackIdx === -1 || SAFE_INDEXES.includes(trackIdx)) return false;
+    const enemies = allPawns.filter(o => o.team !== team && o.state === "BASE");
+    for (let enemy of enemies) {
+        const enemyStart = TEAMS[enemy.team].startIdx;
+        if (trackIdx === enemyStart) return true;
+    }
+    return false;
 }
 
 function evaluateBotMoveScore(pawn, roll) {
     let score = 0;
     const nextSteps = pawn.stepCount + roll;
-    const finishedCount = allPawns.filter(p => p.team === pawn.team && p.state === "FINISHED").length;
-    const activeOutsideCount = allPawns.filter(p => p.team === pawn.team && (p.state === "TRACK" || p.state === "HOME_LANE")).length;
+    const myTokens = allPawns.filter(p => p.team === pawn.team);
+    const finishedCount = myTokens.filter(p => p.state === "FINISHED").length;
+    const remainingTokens = 4 - finishedCount;
+    const isLastToken = (remainingTokens === 1);
+    const activeOutsideCount = myTokens.filter(p => p.state === "TRACK" || p.state === "HOME_LANE").length;
 
-    if (nextSteps === 56) return 15000;
+    if (nextSteps === 56) return 25000;
 
     if (pawn.state === "BASE" && roll === 6) {
         const startTile = TEAMS[pawn.team].startIdx;
         const enemyOnStart = allPawns.find(o => o.team !== pawn.team && o.state === "TRACK" && o.trackIdx === startTile);
-        if (enemyOnStart && !SAFE_INDEXES.includes(startTile)) return 11000;
-        if (activeOutsideCount < 2) return 7500;
-        return 5200;
+        if (enemyOnStart && !SAFE_INDEXES.includes(startTile)) return 16000;
+        if (activeOutsideCount === 0) return 15000;
+        if (activeOutsideCount < 2) return 9500;
+        return 6200;
     }
 
     const targetTrackIdx = (nextSteps <= 50) ? (TEAMS[pawn.team].startIdx + nextSteps) % 52 : -1;
+    const currentlyOnSafeStar = (pawn.state === "TRACK" && SAFE_INDEXES.includes(pawn.trackIdx));
+    const landingOnSafeStar = (targetTrackIdx !== -1 && SAFE_INDEXES.includes(targetTrackIdx));
 
     if (targetTrackIdx !== -1 && !SAFE_INDEXES.includes(targetTrackIdx)) {
         const enemiesOnTarget = allPawns.filter(o => o.team !== pawn.team && o.state === "TRACK" && o.trackIdx === targetTrackIdx);
         if (enemiesOnTarget.length > 0) {
             const victimProgress = Math.max(...enemiesOnTarget.map(e => e.stepCount));
-            return 12000 + (victimProgress * 20);
+            return 18000 + (victimProgress * 30);
         }
     }
 
     if (nextSteps >= 51 && pawn.stepCount < 51) {
-        score += 6500;
+        score += isLastToken ? 14000 : 8500;
     }
 
     const currentThreats = (pawn.state === "TRACK") ? countThreateningEnemiesAt(pawn.team, pawn.trackIdx) : 0;
     if (currentThreats > 0) {
-        score += 4200 * currentThreats;
-        if (SAFE_INDEXES.includes(targetTrackIdx) || nextSteps >= 51) {
-            score += 3000;
+        score += (isLastToken ? 9000 : 5500) * currentThreats;
+        if (landingOnSafeStar || nextSteps >= 51) {
+            score += 4500;
         }
     }
 
-    if (targetTrackIdx !== -1 && SAFE_INDEXES.includes(targetTrackIdx)) {
-        score += 2800;
+    if (landingOnSafeStar) {
+        score += isLastToken ? 6500 : 3800;
+    }
+
+    if (currentlyOnSafeStar && !landingOnSafeStar && nextSteps < 51) {
+        score -= isLastToken ? 4500 : 2200;
     }
 
     if (targetTrackIdx !== -1) {
         const friendlyOnTarget = allPawns.find(o => o !== pawn && o.team === pawn.team && o.state === "TRACK" && o.trackIdx === targetTrackIdx);
-        if (friendlyOnTarget) score += 1800;
+        if (friendlyOnTarget) score += 2200;
     }
 
     if (targetTrackIdx !== -1) {
         const futureThreats = countThreateningEnemiesAt(pawn.team, targetTrackIdx);
         if (futureThreats > 0) {
-            score -= (2600 * futureThreats);
+            const dangerPenalty = isLastToken ? 11000 : 4200;
+            score -= (dangerPenalty * futureThreats);
         }
 
-        const enemiesAhead = allPawns.filter(o => o.team !== pawn.team && o.state === "TRACK" && !SAFE_INDEXES.includes(o.trackIdx));
-        for (let enemy of enemiesAhead) {
-            const chaseDist = (enemy.trackIdx - targetTrackIdx + 52) % 52;
-            if (chaseDist >= 1 && chaseDist <= 6) {
-                score += 1200;
+        if (isEnemyBaseSpawnDanger(pawn.team, targetTrackIdx)) {
+            score -= isLastToken ? 3500 : 1200;
+        }
+
+        if (futureThreats === 0) {
+            const enemiesAhead = allPawns.filter(o => o.team !== pawn.team && o.state === "TRACK" && !SAFE_INDEXES.includes(o.trackIdx));
+            for (let enemy of enemiesAhead) {
+                const chaseDist = (enemy.trackIdx - targetTrackIdx + 52) % 52;
+                if (chaseDist >= 1 && chaseDist <= 6) {
+                    score += 1800;
+                }
             }
         }
     }
 
     if (pawn.state === "HOME_LANE") {
-        score += 3200 + (nextSteps * 25);
+        score += 3500 + (nextSteps * 30);
     }
-    score += nextSteps * (finishedCount >= 2 ? 35 : 18);
+
+    score += nextSteps * (isLastToken ? 12 : 22);
 
     return score;
 }
@@ -874,6 +970,7 @@ let currentTurn = 0;
 let rolledNumber = 0;
 let canPickToken = false;
 let isTokenMoving = false;
+let consecutiveSixes = 0;
 
 const rollBtn = document.getElementById('roll-btn');
 const msgEl = document.getElementById('msg');
@@ -887,7 +984,18 @@ const ludoDice = new LudoDice(scene, (val) => {
     rolledNumber = val;
     diceResult.innerText = `Dice: ${rolledNumber}`;
 
-    if (rolledNumber === 6) playSound(sixAudio);
+    if (rolledNumber === 6) {
+        consecutiveSixes++;
+        if (consecutiveSixes >= 3) {
+            consecutiveSixes = 0;
+            msgEl.innerText = "3 Baar 6! Turn Pass!";
+            setTimeout(() => passTurn(false), 450);
+            return;
+        }
+        playSound(sixAudio);
+    } else {
+        consecutiveSixes = 0;
+    }
 
     const currentTeam = turnList[currentTurn];
     const isBot = (isAIMode && currentTeam === "YELLOW");
@@ -1127,6 +1235,7 @@ function checkCut(activePawn) {
 
 function passTurn(extraRoll) {
     if (!extraRoll) {
+        consecutiveSixes = 0;
         currentTurn = (currentTurn + 1) % turnList.length;
     }
     const team = turnList[currentTurn];
@@ -1136,39 +1245,45 @@ function passTurn(extraRoll) {
 }
 
 window.addEventListener('resize', () => {
-    fitBoardCamera();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    try {
+        fitBoardCamera();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    } catch(e) {}
 });
 
 function animate(time) {
     requestAnimationFrame(animate);
-    TWEEN.update(time);
+    if (isPageHidden) return;
 
-    const activeTurnTeam = turnList[currentTurn];
-    allPawns.forEach(p => {
-        if (canPickToken && !isTokenMoving && p.team === activeTurnTeam && canPawnMove(p, rolledNumber)) {
-            p.group.position.y = 0.22 + Math.abs(Math.sin(time * 0.008)) * 0.28;
-        } else if (!isTokenMoving && p.group.position.y > 0.06) {
-            p.group.position.y = 0.05;
+    try {
+        TWEEN.update(time);
+
+        const activeTurnTeam = turnList[currentTurn];
+        allPawns.forEach(p => {
+            if (canPickToken && !isTokenMoving && p.team === activeTurnTeam && canPawnMove(p, rolledNumber)) {
+                p.group.position.y = 0.22 + Math.abs(Math.sin(time * 0.008)) * 0.28;
+            } else if (!isTokenMoving && p.group.position.y > 0.06) {
+                p.group.position.y = 0.05;
+            }
+        });
+
+        for (let i = activeParticles.length - 1; i >= 0; i--) {
+            const p = activeParticles[i];
+            p.mesh.position.x += p.vx;
+            p.mesh.position.y += p.vy;
+            p.mesh.position.z += p.vz;
+            p.vy -= 0.007;
+            p.life -= 0.025;
+            p.mesh.scale.setScalar(p.life);
+            if (p.life <= 0) {
+                scene.remove(p.mesh);
+                activeParticles.splice(i, 1);
+            }
         }
-    });
 
-    for (let i = activeParticles.length - 1; i >= 0; i--) {
-        const p = activeParticles[i];
-        p.mesh.position.x += p.vx;
-        p.mesh.position.y += p.vy;
-        p.mesh.position.z += p.vz;
-        p.vy -= 0.007;
-        p.life -= 0.025;
-        p.mesh.scale.setScalar(p.life);
-        if (p.life <= 0) {
-            scene.remove(p.mesh);
-            activeParticles.splice(i, 1);
-        }
-    }
-
-    updateFireworks();
-    renderer.render(scene, camera);
+        updateFireworks();
+        renderer.render(scene, camera);
+    } catch(e) {}
 }
 animate();
 

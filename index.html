@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="profile_setup.js"></script>
-<script src="ads.js"></script>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>3D Ludo Arena - Main Home</title>
+    <script src="capacitor.js"></script>
+    <script src="profile_setup.js"></script>
+    <script src="ads.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,34 +24,33 @@
             padding: 10px 12px 68px 12px;
         }
 
-        /* === STAGE 1: SHADIVA STUDIO INTRO (company.jpeg) === */
+        /* === STAGE 1: SHADIVA STUDIO INTRO === */
         #studio-splash {
             position: fixed; inset: 0; width: 100vw; height: 100vh;
             background: #0a0400; z-index: 2147483647;
             display: flex; align-items: center; justify-content: center;
-            transition: opacity 0.55s ease, visibility 0.55s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
         #studio-splash.hide {
             opacity: 0; visibility: hidden; pointer-events: none;
         }
         .studio-img {
             width: 100%; height: 100%; object-fit: cover;
-            animation: studioZoom 2.3s ease-out forwards;
+            animation: studioZoom 1.2s ease-out forwards;
         }
         @keyframes studioZoom {
-            0% { transform: scale(1.1); opacity: 0.25; }
-            25% { opacity: 1; }
+            0% { transform: scale(1.08); opacity: 0.4; }
             100% { transform: scale(1.0); opacity: 1; }
         }
 
-        /* === STAGE 2: 3D LUDO ARENA + DISCLAIMER (logo.png) === */
+        /* === STAGE 2: 3D LUDO ARENA + DISCLAIMER === */
         #brand-splash {
             position: fixed; inset: 0; width: 100vw; height: 100vh;
             background: radial-gradient(circle at center, #1e3a8a 0%, #09132e 65%, #030712 100%);
             z-index: 2147483646;
             display: flex; flex-direction: column; align-items: center; justify-content: space-between;
             padding: 40px 20px 28px;
-            transition: opacity 0.6s ease, visibility 0.6s ease;
+            transition: opacity 0.45s ease, visibility 0.45s ease;
         }
         #brand-splash.hide {
             opacity: 0; visibility: hidden; pointer-events: none;
@@ -60,7 +59,7 @@
             flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
         }
         .splash-logo {
-            width: 190px; height: 190px; border-radius: 36px; object-fit: cover;
+            width: 180px; height: 180px; border-radius: 34px; object-fit: cover;
             border: 3px solid #facc15;
             box-shadow: 0 0 40px rgba(250, 204, 21, 0.45), 0 15px 35px rgba(0, 0, 0, 0.8);
         }
@@ -73,11 +72,10 @@
             border-radius: 10px;
         }
         .splash-loader-bar.run {
-            animation: loadProgress 2.8s ease-out forwards;
+            animation: loadProgress 1.3s ease-out forwards;
         }
         @keyframes loadProgress {
-            0% { width: 5%; }
-            65% { width: 78%; }
+            0% { width: 10%; }
             100% { width: 100%; }
         }
         .splash-disclaimer {
@@ -266,6 +264,15 @@
             pointer-events: none;
         }
 
+        #logo-fallback-title {
+            display: none;
+            font-size: 28px;
+            font-weight: 900;
+            color: #facc15;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+
         .boxes-container {
             width: 100%;
             max-width: 440px;
@@ -406,18 +413,18 @@
 </head>
 <body>
 
-    <!-- STAGE 1: SHADIVA STUDIO LOGO (2 SECONDS) -->
+    <!-- STAGE 1: SHADIVA STUDIO LOGO -->
     <div id="studio-splash">
         <img src="company.jpeg"
-             onerror="if(!this.dataset.t){this.dataset.t=1;this.src='comapny.jpeg';}else if(this.dataset.t=='1'){this.dataset.t=2;this.src='https://raw.githubusercontent.com/3dludo-arena/ludo/main/www/company.jpeg';}"
+             onerror="this.style.display='none'; document.getElementById('studio-splash').classList.add('hide');"
              alt="Shadiva Studio" class="studio-img">
     </div>
 
-    <!-- STAGE 2: 3D LUDO ARENA + DISCLAIMER (3 SECONDS) -->
+    <!-- STAGE 2: 3D LUDO ARENA + DISCLAIMER -->
     <div id="brand-splash">
         <div class="splash-center">
             <img src="logo.png"
-                 onerror="if(!this.dataset.t){this.dataset.t=1;this.src='https://raw.githubusercontent.com/3dludo-arena/ludo/main/www/logo.png';}"
+                 onerror="this.style.display='none';"
                  alt="3D Ludo Arena" class="splash-logo">
             <div class="splash-loader-wrap">
                 <div class="splash-loader-bar" id="splash-bar"></div>
@@ -467,6 +474,7 @@
     <!-- 3D LOGO -->
     <div class="showcase-stage" id="stage-box">
         <canvas id="logo-3d-canvas"></canvas>
+        <div id="logo-fallback-title">👑 3D LUDO ARENA</div>
     </div>
 
     <!-- MODES -->
@@ -557,15 +565,21 @@
     </div>
 
 <script>
-// --- 2-STAGE STUDIO + GAME SPLASH CONTROLLER ---
-window.addEventListener('DOMContentLoaded', () => {
+// --- FAST & FAIL-SAFE SPLASH CONTROLLER ---
+function hideAllSplashes() {
+    const studioSplash = document.getElementById('studio-splash');
+    const brandSplash = document.getElementById('brand-splash');
+    if (studioSplash) { studioSplash.classList.add('hide'); studioSplash.style.display = 'none'; }
+    if (brandSplash) { brandSplash.classList.add('hide'); brandSplash.style.display = 'none'; }
+}
+
+(function initSplash() {
     const studioSplash = document.getElementById('studio-splash');
     const brandSplash = document.getElementById('brand-splash');
     const splashBar = document.getElementById('splash-bar');
 
     if (sessionStorage.getItem('splashShown')) {
-        if (studioSplash) studioSplash.style.display = 'none';
-        if (brandSplash) brandSplash.style.display = 'none';
+        hideAllSplashes();
         return;
     }
     sessionStorage.setItem('splashShown', 'true');
@@ -573,12 +587,15 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (studioSplash) studioSplash.classList.add('hide');
         if (splashBar) splashBar.classList.add('run');
-    }, 2200);
+    }, 1100);
 
     setTimeout(() => {
         if (brandSplash) brandSplash.classList.add('hide');
-    }, 5200);
-});
+    }, 2400);
+
+    // Emergency guarantee: Never block main UI beyond 2.8s
+    setTimeout(hideAllSplashes, 2800);
+})();
 
 // --- JOIN CODE POPUP HANDLERS ---
 function openJoinCodeModal() {
@@ -618,128 +635,143 @@ document.addEventListener('pointerdown', (e) => {
     if (target) playClickSound();
 });
 
-// 1. THREE.JS 3D LOGO
+// 1. THREE.JS 3D LOGO (WITH OFFLINE / WEBGL FALLBACK)
 (function init3DLogo() {
     const canvas = document.getElementById('logo-3d-canvas');
+    const fallbackTitle = document.getElementById('logo-fallback-title');
     const container = document.getElementById('stage-box');
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(36, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0, 4.3, 7.8);
-    camera.lookAt(0, 0.25, 0);
-
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.25);
-    dirLight.position.set(6, 12, 7);
-    scene.add(dirLight);
-
-    const blueBackLight = new THREE.PointLight(0x38bdf8, 2, 10);
-    blueBackLight.position.set(-3, 2, -2);
-    scene.add(blueBackLight);
-
-    const logoGroup = new THREE.Group();
-    scene.add(logoGroup);
-
-    const textCanvas = document.createElement('canvas');
-    textCanvas.width = 512;
-    textCanvas.height = 140;
-    const ctx = textCanvas.getContext('2d');
-    
-    ctx.font = '48px "Segoe UI Emoji", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('👑', 256, 45);
-
-    ctx.font = '900 46px "Segoe UI", sans-serif';
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
-    ctx.shadowBlur = 12;
-    ctx.shadowOffsetY = 6;
-    
-    const textGrad = ctx.createLinearGradient(0, 60, 0, 130);
-    textGrad.addColorStop(0, '#fef08a');
-    textGrad.addColorStop(0.5, '#f59e0b');
-    textGrad.addColorStop(1, '#b45309');
-    ctx.fillStyle = textGrad;
-    ctx.fillText('3D LUDO ARENA', 256, 110);
-
-    const textTexture = new THREE.CanvasTexture(textCanvas);
-    const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
-    const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.0), textMat);
-    textPlane.position.set(0, 1.25, 0.2);
-    logoGroup.add(textPlane);
-
-    const boardGroup = new THREE.Group();
-    boardGroup.rotation.x = 0.55;
-    boardGroup.rotation.y = -0.45;
-    boardGroup.position.set(0, -0.4, 0);
-
-    const boardBase = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.18, 3.4), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.2 }));
-    boardGroup.add(boardBase);
-
-    const boardDeck = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 3.2), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }));
-    boardDeck.position.y = 0.02;
-    boardGroup.add(boardDeck);
-
-    const colors = [
-        { hex: 0xef4444, x: -0.85, z: -0.85 },
-        { hex: 0x22c55e, x:  0.85, z: -0.85 },
-        { hex: 0xeab308, x:  0.85, z:  0.85 },
-        { hex: 0x3b82f6, x: -0.85, z:  0.85 }
-    ];
-
-    colors.forEach(c => {
-        const pad = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.22, 1.2), new THREE.MeshStandardMaterial({ color: c.hex, roughness: 0.2, metalness: 0.1 }));
-        pad.position.set(c.x, 0.03, c.z);
-        boardGroup.add(pad);
-
-        const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.24, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
-        dot.position.set(c.x, 0.04, c.z);
-        boardGroup.add(dot);
-    });
-
-    function makeMiniPawn(hex) {
-        const pGrp = new THREE.Group();
-        const mat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.12, metalness: 0.4 });
-        const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.2, 16), mat);
-        base.position.y = 0.1;
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mat);
-        head.position.y = 0.28;
-        pGrp.add(base, head);
-        return pGrp;
+    if (typeof THREE === 'undefined') {
+        if (canvas) canvas.style.display = 'none';
+        if (fallbackTitle) fallbackTitle.style.display = 'block';
+        return;
     }
 
-    boardGroup.add(makeMiniPawn(0xef4444), makeMiniPawn(0xeab308), makeMiniPawn(0x3b82f6), makeMiniPawn(0x22c55e));
+    try {
+        const scene = new THREE.Scene();
+        const w = container.clientWidth || 340;
+        const h = container.clientHeight || 215;
+        const camera = new THREE.PerspectiveCamera(36, w / h, 0.1, 100);
+        camera.position.set(0, 4.3, 7.8);
+        camera.lookAt(0, 0.25, 0);
 
-    const diceMaterials = Array(6).fill(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 }));
-    const centerDice = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.72, 0.72), diceMaterials);
-    centerDice.position.set(0, 0.75, 0);
-    boardGroup.add(centerDice);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer.setSize(w, h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-    logoGroup.add(boardGroup);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.9));
 
-    let clock = 0;
-    function animateLogo() {
-        requestAnimationFrame(animateLogo);
-        clock += 0.02;
-        logoGroup.position.y = Math.sin(clock) * 0.08;
-        centerDice.rotation.x += 0.012;
-        centerDice.rotation.y += 0.018;
-        centerDice.position.y = 0.72 + Math.sin(clock * 2.2) * 0.08;
-        boardGroup.rotation.y = -0.45 + Math.sin(clock * 0.8) * 0.15;
-        renderer.render(scene, camera);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.25);
+        dirLight.position.set(6, 12, 7);
+        scene.add(dirLight);
+
+        const blueBackLight = new THREE.PointLight(0x38bdf8, 2, 10);
+        blueBackLight.position.set(-3, 2, -2);
+        scene.add(blueBackLight);
+
+        const logoGroup = new THREE.Group();
+        scene.add(logoGroup);
+
+        const textCanvas = document.createElement('canvas');
+        textCanvas.width = 512;
+        textCanvas.height = 140;
+        const ctx = textCanvas.getContext('2d');
+        
+        ctx.font = '48px "Segoe UI Emoji", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('👑', 256, 45);
+
+        ctx.font = '900 46px "Segoe UI", sans-serif';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.85)';
+        ctx.shadowBlur = 12;
+        ctx.shadowOffsetY = 6;
+        
+        const textGrad = ctx.createLinearGradient(0, 60, 0, 130);
+        textGrad.addColorStop(0, '#fef08a');
+        textGrad.addColorStop(0.5, '#f59e0b');
+        textGrad.addColorStop(1, '#b45309');
+        ctx.fillStyle = textGrad;
+        ctx.fillText('3D LUDO ARENA', 256, 110);
+
+        const textTexture = new THREE.CanvasTexture(textCanvas);
+        const textMat = new THREE.MeshBasicMaterial({ map: textTexture, transparent: true });
+        const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.0), textMat);
+        textPlane.position.set(0, 1.25, 0.2);
+        logoGroup.add(textPlane);
+
+        const boardGroup = new THREE.Group();
+        boardGroup.rotation.x = 0.55;
+        boardGroup.rotation.y = -0.45;
+        boardGroup.position.set(0, -0.4, 0);
+
+        const boardBase = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.18, 3.4), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.3, metalness: 0.2 }));
+        boardGroup.add(boardBase);
+
+        const boardDeck = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.2, 3.2), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.2 }));
+        boardDeck.position.y = 0.02;
+        boardGroup.add(boardDeck);
+
+        const colors = [
+            { hex: 0xef4444, x: -0.85, z: -0.85 },
+            { hex: 0x22c55e, x:  0.85, z: -0.85 },
+            { hex: 0xeab308, x:  0.85, z:  0.85 },
+            { hex: 0x3b82f6, x: -0.85, z:  0.85 }
+        ];
+
+        colors.forEach(c => {
+            const pad = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.22, 1.2), new THREE.MeshStandardMaterial({ color: c.hex, roughness: 0.2, metalness: 0.1 }));
+            pad.position.set(c.x, 0.03, c.z);
+            boardGroup.add(pad);
+
+            const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.24, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+            dot.position.set(c.x, 0.04, c.z);
+            boardGroup.add(dot);
+        });
+
+        function makeMiniPawn(hex) {
+            const pGrp = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.12, metalness: 0.4 });
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.18, 0.2, 16), mat);
+            base.position.y = 0.1;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.12, 16, 16), mat);
+            head.position.y = 0.28;
+            pGrp.add(base, head);
+            return pGrp;
+        }
+
+        boardGroup.add(makeMiniPawn(0xef4444), makeMiniPawn(0xeab308), makeMiniPawn(0x3b82f6), makeMiniPawn(0x22c55e));
+
+        const diceMaterials = Array(6).fill(new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.2 }));
+        const centerDice = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.72, 0.72), diceMaterials);
+        centerDice.position.set(0, 0.75, 0);
+        boardGroup.add(centerDice);
+
+        logoGroup.add(boardGroup);
+
+        let clock = 0;
+        function animateLogo() {
+            requestAnimationFrame(animateLogo);
+            if (document.hidden) return;
+            clock += 0.02;
+            logoGroup.position.y = Math.sin(clock) * 0.08;
+            centerDice.rotation.x += 0.012;
+            centerDice.rotation.y += 0.018;
+            centerDice.position.y = 0.72 + Math.sin(clock * 2.2) * 0.08;
+            boardGroup.rotation.y = -0.45 + Math.sin(clock * 0.8) * 0.15;
+            renderer.render(scene, camera);
+        }
+        animateLogo();
+
+        window.addEventListener('resize', () => {
+            if (!container.clientWidth || !container.clientHeight) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+    } catch (e) {
+        if (canvas) canvas.style.display = 'none';
+        if (fallbackTitle) fallbackTitle.style.display = 'block';
     }
-    animateLogo();
-
-    window.addEventListener('resize', () => {
-        if (!container.clientWidth || !container.clientHeight) return;
-        camera.aspect = container.clientWidth / container.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
-    });
 })();
 
 // 2. PROFILE STORAGE & ECONOMY
@@ -757,19 +789,23 @@ const DEFAULT_PROFILE = {
 let selectedAvatarTemp = "🧑‍🎤";
 
 function getProfile() {
-    let saved = localStorage.getItem(PROFILE_KEY);
-    if (!saved) {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(DEFAULT_PROFILE));
+    try {
+        let saved = localStorage.getItem(PROFILE_KEY);
+        if (!saved) {
+            localStorage.setItem(PROFILE_KEY, JSON.stringify(DEFAULT_PROFILE));
+            return { ...DEFAULT_PROFILE };
+        }
+        return JSON.parse(saved);
+    } catch (e) {
         return { ...DEFAULT_PROFILE };
     }
-    return JSON.parse(saved);
 }
 
 function loadProfile() {
     const data = getProfile();
     if (!data.coins || Number(data.coins) < 50) {
         data.coins = 500;
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+        try { localStorage.setItem(PROFILE_KEY, JSON.stringify(data)); } catch (e) {}
     }
 
     document.getElementById('ui-name').innerText = data.name;
@@ -788,18 +824,19 @@ function startPaidGame(redirectUrl) {
         return;
     }
     data.coins -= 50;
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
-
-    Object.keys(localStorage).forEach(key => {
-        if (
-            key !== PROFILE_KEY &&
-            key !== 'ludo_onboarding_completed_v1' &&
-            !key.toLowerCase().includes('profile') &&
-            !key.toLowerCase().includes('onboarding')
-        ) {
-            localStorage.removeItem(key);
-        }
-    });
+    try {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+        Object.keys(localStorage).forEach(key => {
+            if (
+                key !== PROFILE_KEY &&
+                key !== 'ludo_onboarding_completed_v1' &&
+                !key.toLowerCase().includes('profile') &&
+                !key.toLowerCase().includes('onboarding')
+            ) {
+                localStorage.removeItem(key);
+            }
+        });
+    } catch (e) {}
 
     setTimeout(() => { window.location.href = redirectUrl; }, 120);
 }
@@ -813,7 +850,7 @@ function checkDailyLoginBonus() {
         setTimeout(() => {
             const modal = document.getElementById('daily-modal');
             if (modal) modal.style.display = 'flex';
-        }, 5500);
+        }, 3200);
     }
 }
 
@@ -822,7 +859,7 @@ function claimDailyReward() {
     const data = getProfile();
     data.coins = Number(data.coins || 0) + 50;
     data.lastDailyClaimTimestamp = Date.now();
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(data)); } catch (e) {}
     loadProfile();
     const modal = document.getElementById('daily-modal');
     if (modal) modal.style.display = 'none';
@@ -835,7 +872,7 @@ function startWatchingAd() {
         try { niceAudio.play().catch(() => {}); } catch (e) {}
         const data = getProfile();
         data.coins = Number(data.coins || 0) + 100;
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
+        try { localStorage.setItem(PROFILE_KEY, JSON.stringify(data)); } catch (e) {}
         loadProfile();
         alert("🎉 Rewarded Ad Complete! +100 Free Coins aapke wallet me add ho gaye!");
     };
@@ -875,13 +912,70 @@ function saveProfileData() {
     let saved = getProfile();
     saved.name = nameInput;
     saved.avatar = selectedAvatarTemp;
-    localStorage.setItem(PROFILE_KEY, JSON.stringify(saved));
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(saved)); } catch (e) {}
     loadProfile();
     closeProfileModal();
 }
 
 loadProfile();
 checkDailyLoginBonus();
+</script>
+
+<!-- NO INTERNET POPUP -->
+<div id="offline-guard-modal" style="
+    position: fixed; inset: 0; background: rgba(2, 6, 23, 0.94);
+    display: none; align-items: center; justify-content: center;
+    z-index: 2147483647; backdrop-filter: blur(12px); padding: 20px;
+">
+    <div style="
+        background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        border: 2px solid #ef4444; border-radius: 24px;
+        padding: 28px 22px; max-width: 340px; width: 100%; text-align: center;
+        color: #fff; font-family: 'Segoe UI', sans-serif;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+    ">
+        <div style="font-size: 46px; margin-bottom: 10px;">📡</div>
+        <h2 style="font-size: 20px; font-weight: 900; color: #f8fafc; margin-bottom: 8px;">
+            No Internet Connection
+        </h2>
+        <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.55; margin-bottom: 22px;">
+            Please turn on your <strong>Mobile Data</strong> or <strong>Wi-Fi</strong> to load the 3D Ludo Arena and continue playing.
+        </p>
+        <button type="button" onclick="retryNetworkConnection()" style="
+            width: 100%; padding: 13px; border: none; border-radius: 14px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: #fff; font-size: 15px; font-weight: 800; cursor: pointer;
+            box-shadow: 0 6px 18px rgba(34, 197, 94, 0.4);
+        ">RETRY CONNECTION 🔄</button>
+    </div>
+</div>
+
+<script>
+function updateNetworkPopup() {
+    const modal = document.getElementById('offline-guard-modal');
+    if (!modal) return;
+    if (!navigator.onLine) {
+        modal.style.display = 'flex';
+    } else {
+        modal.style.display = 'none';
+        if (typeof THREE === 'undefined') {
+            window.location.reload();
+        }
+    }
+}
+
+function retryNetworkConnection() {
+    if (navigator.onLine) {
+        window.location.reload();
+    } else {
+        const modal = document.getElementById('offline-guard-modal');
+        if (modal) modal.style.display = 'flex';
+    }
+}
+
+window.addEventListener('offline', updateNetworkPopup);
+window.addEventListener('online', updateNetworkPopup);
+window.addEventListener('DOMContentLoaded', updateNetworkPopup);
 </script>
 </body>
 </html>
